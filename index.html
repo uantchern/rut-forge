@@ -119,10 +119,10 @@
                 opacity: 0.2 + Math.random() * 0.6       // Organic leaf transparency
             }), []);
 
-            let initial = { rotate: leaf.rotStart, opacity: 0 };
-            let animate = { opacity: leaf.opacity };
-            let transition = { repeat: Infinity, ease: "linear" };
-            let style = { 
+            let initialInner = { rotate: leaf.rotStart };
+            let animateInner = {};
+            let transitionInner = { repeat: Infinity, ease: "linear" };
+            let styleOuter = { 
                 left: `${leaf.startX}vw`, 
                 top: `${leaf.startY}vh`, 
                 width: leaf.size, 
@@ -131,58 +131,57 @@
             };
 
             if (emotion === 'neutral') {
-                // Bobbing gently organically, each leaf sways differently
-                animate = { 
-                    ...animate,
+                animateInner = { 
                     y: [0, leaf.sway * 1.5, 0], 
                     x: [0, leaf.sway, 0], 
                     rotate: [leaf.rotStart, leaf.rotStart + (leaf.sway * 2)] 
                 };
-                transition = { duration: 15 * leaf.speed + 10, repeat: Infinity, ease: "easeInOut", delay: leaf.delay };
+                transitionInner = { duration: 15 * leaf.speed + 10, repeat: Infinity, ease: "easeInOut", delay: leaf.delay };
             } else if (emotion === 'sad') {
-                // Fall gently from top through independent paths
-                style.top = '-15vh';
-                animate = { 
-                    ...animate,
+                styleOuter.top = '-15vh';
+                animateInner = { 
                     y: ['-10vh', '115vh'], 
                     x: ['0vw', `${leaf.sway * 2}vw`, `${-leaf.sway}vw`], 
                     rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd / 4] 
                 };
-                transition = { duration: 25 * leaf.speed + 20, repeat: 1, ease: "linear", delay: leaf.delay };
+                transitionInner = { duration: 25 * leaf.speed + 20, repeat: 1, ease: "linear", delay: leaf.delay };
             } else if (emotion === 'angry') {
-                // Buffeted by strong wind (horizontal blast, independent speeds and massive spins)
-                style.left = '-15vw';
-                animate = { 
-                    ...animate,
+                styleOuter.left = '-15vw';
+                animateInner = { 
                     x: ['-20vw', '120vw'], 
                     y: [0, leaf.sway * 4], 
                     rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd] 
                 };
-                transition = { duration: 4 * leaf.speed + 1.5, repeat: 1, ease: "easeIn", delay: leaf.delay / 2 };
+                transitionInner = { duration: 4 * leaf.speed + 1.5, repeat: 1, ease: "easeIn", delay: leaf.delay / 2 };
             } else if (emotion === 'overwhelmed') {
-                // Lots of leaves swirling quickly in chaotic vortex paths
-                style.top = '-20vh';
-                animate = { 
-                    ...animate,
+                styleOuter.top = '-20vh';
+                animateInner = { 
                     y: ['-20vh', '120vh'], 
                     x: [`${leaf.sway * 2}vw`, `${-leaf.sway * 3}vw`], 
                     rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd] 
                 };
-                transition = { duration: 8 * leaf.speed + 4, repeat: 1, ease: "linear", delay: leaf.delay };
+                transitionInner = { duration: 8 * leaf.speed + 4, repeat: 1, ease: "linear", delay: leaf.delay };
             }
 
             return (
                 <motion.div
                     className="absolute drop-shadow-sm pointer-events-none"
-                    style={style}
-                    initial={initial}
-                    animate={animate}
-                    transition={transition}
+                    style={styleOuter}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: leaf.opacity }}
+                    transition={{ duration: 3, delay: leaf.delay }}
                 >
-                    <svg viewBox="0 0 100 100" className="w-full h-full text-[#8BA989]" fill="currentColor">
-                        <path d="M50 0 C80 30, 95 60, 50 100 C5 60, 20 30, 50 0 Z" />
-                        <path d="M50 10 L50 90" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" fill="none" />
-                    </svg>
+                    <motion.div 
+                        className="w-full h-full text-[#8BA989]"
+                        initial={initialInner}
+                        animate={animateInner}
+                        transition={transitionInner}
+                    >
+                        <svg viewBox="0 0 100 100" className="w-full h-full" fill="currentColor">
+                            <path d="M50 0 C80 30, 95 60, 50 100 C5 60, 20 30, 50 0 Z" />
+                            <path d="M50 10 L50 90" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" fill="none" />
+                        </svg>
+                    </motion.div>
                 </motion.div>
             );
         };
