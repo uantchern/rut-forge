@@ -138,17 +138,17 @@
                     x: [0, leaf.sway, 0], 
                     rotate: [leaf.rotStart, leaf.rotStart + (leaf.sway * 2)] 
                 };
-                transition = { duration: 6 * leaf.speed + 4, repeat: Infinity, ease: "easeInOut", delay: leaf.delay };
+                transition = { duration: 15 * leaf.speed + 10, repeat: Infinity, ease: "easeInOut", delay: leaf.delay };
             } else if (emotion === 'sad') {
                 // Fall gently from top through independent paths
                 style.top = '-15vh';
                 animate = { 
                     ...animate,
                     y: ['-10vh', '115vh'], 
-                    x: ['0vw', `${leaf.sway}vw`, `${-leaf.sway}vw`], 
+                    x: ['0vw', `${leaf.sway * 2}vw`, `${-leaf.sway}vw`], 
                     rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd / 4] 
                 };
-                transition = { duration: 15 * leaf.speed + 10, repeat: Infinity, ease: "linear", delay: leaf.delay };
+                transition = { duration: 25 * leaf.speed + 20, repeat: 1, ease: "linear", delay: leaf.delay };
             } else if (emotion === 'angry') {
                 // Buffeted by strong wind (horizontal blast, independent speeds and massive spins)
                 style.left = '-15vw';
@@ -158,17 +158,17 @@
                     y: [0, leaf.sway * 4], 
                     rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd] 
                 };
-                transition = { duration: 1.5 * leaf.speed + 0.5, repeat: Infinity, ease: "easeIn", delay: leaf.delay / 2 };
+                transition = { duration: 4 * leaf.speed + 1.5, repeat: 1, ease: "easeIn", delay: leaf.delay / 2 };
             } else if (emotion === 'overwhelmed') {
                 // Lots of leaves swirling quickly in chaotic vortex paths
                 style.top = '-20vh';
                 animate = { 
                     ...animate,
                     y: ['-20vh', '120vh'], 
-                    x: [`${leaf.sway}vw`, `${-leaf.sway * 2}vw`], 
+                    x: [`${leaf.sway * 2}vw`, `${-leaf.sway * 3}vw`], 
                     rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd] 
                 };
-                transition = { duration: 3 * leaf.speed + 2, repeat: Infinity, ease: "linear", delay: leaf.delay };
+                transition = { duration: 8 * leaf.speed + 4, repeat: 1, ease: "linear", delay: leaf.delay };
             }
 
             return (
@@ -323,13 +323,13 @@ CORE RULES:
                                 transition={{ duration: 1.5, ease: 'easeOut' }}
                                 className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                <p className={`max-w-[85%] text-2xl md:text-4xl font-light leading-relaxed tracking-wide ${m.role === 'user' ? 'text-[#8B7E9A] text-right' : 'text-textSoftDark text-left'}`}>
+                                <p className={`max-w-[85%] leading-relaxed tracking-wide ${m.role === 'user' ? 'text-xl md:text-2xl text-[#AFA3BA] italic text-right' : 'text-3xl md:text-5xl text-[#5C5470] font-light text-left'}`}>
                                     {m.text}
                                 </p>
                             </motion.div>
                         ))}
                         {loading && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#8B7E9A] text-xl font-light">mei is thinking...</motion.div>
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#AFA3BA] text-xl font-light italic text-right">mei is listening...</motion.div>
                         )}
                         <div ref={chatEndRef} className="h-10" />
                     </div>
