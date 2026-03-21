@@ -281,19 +281,22 @@
         // Load voices
         synth.onvoiceschanged = () => {
             const allVoices = synth.getVoices();
-            // Target premium/natural American female voices (Mac/Windows favorites)
-            const preferredNames = ["Samantha", "Aria", "Google US English", "Zira", "Jenny", "Victoria"];
             
-            meiVoices = allVoices.filter(v => v.lang.includes("en-US") && preferredNames.some(name => v.name.includes(name)));
+            // 1. First priority: Cloud-based Neural voices which sound 100% natural (e.g., Microsoft Aria Natural, Google US English)
+            let premiumVoices = allVoices.filter(v => v.lang.includes("en-US") && (v.name.includes("Natural") || v.name.includes("Online")));
             
-            // Fallback to any generic US female voice
-            if(meiVoices.length === 0) {
-                meiVoices = allVoices.filter(v => v.lang.includes("en-US") && (v.name.includes("Female") || v.name.includes("Woman")));
+            // 2. Second priority: High quality local female voices
+            if (premiumVoices.length === 0) {
+                premiumVoices = allVoices.filter(v => v.lang.includes("en-US") && ["Samantha", "Aria", "Google", "Zira", "Jenny"].some(name => v.name.includes(name)));
             }
-            // Final fallback to any US voice
-            if(meiVoices.length === 0) {
-                meiVoices = allVoices.filter(v => v.lang.includes("en-US"));
+            
+            // 3. Fallback
+            if(premiumVoices.length === 0) {
+                premiumVoices = allVoices.filter(v => v.lang.includes("en-US") && (v.name.includes("Female") || v.name.includes("Woman")));
             }
+            if(premiumVoices.length === 0) premiumVoices = allVoices.filter(v => v.lang.includes("en-US"));
+            
+            meiVoices = premiumVoices;
         };
 
         function speak(text) {
@@ -301,9 +304,10 @@
             const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
             const utterThis = new SpeechSynthesisUtterance(cleanText);
             
-            // "Huskier, Calmer, Slower" cadence
-            utterThis.rate = 0.9;  // Slower pace for calm therapy
-            utterThis.pitch = 0.8; // Lower pitch for a huskier, more resonant tone
+            // Standardizing rate and pitch to 1.0. 
+            // Modifying pitch/rate artificially forces the browser engine to distort the audio waves, creating the "robotic" sound.
+            utterThis.rate = 1.0;  
+            utterThis.pitch = 1.0; 
             
             if(meiVoices.length > 0) utterThis.voice = meiVoices[0]; // grab top matched voice
             synth.speak(utterThis);
