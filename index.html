@@ -272,21 +272,32 @@
         const input = document.getElementById('chatInput');
 
         // API Architecture Toggles
-        // The application will attempt to read the local `.env` file securely without uploading it.
-        // If the `.env` file is missing (e.g., when deployed on the public internet), it will fallback to the local cache.
+        // PUBLIC DEPLOYMENT: If you want exactly zero popups for public clients without building a backend, 
+        // you MUST log into Google Cloud Console, restrict your API Key strictly to "https://idontknowwhattosay.net/*", 
+        // and only then securely paste it between these quotes below:
+        const HARDCODED_PUBLIC_KEY = ""; 
+
         let GEMINI_API_KEY = null;
         let FETCH_URL = null;
 
         async function initializeGeminiKey() {
+            // 0. Use Public Domain-Restricted Key if Provided
+            if (HARDCODED_PUBLIC_KEY.length > 10) {
+                GEMINI_API_KEY = HARDCODED_PUBLIC_KEY;
+                console.log("Using Public Domain-Restricted API Key.");
+            }
+
             // 1. Silent Mobile Magic Link Injector
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlKey = urlParams.get('key') || urlParams.get('gemini');
-            if (urlKey) {
-                localStorage.setItem('MEI_GEMINI_KEY', urlKey);
-                GEMINI_API_KEY = urlKey;
-                
-                // Erase the key from the browser URL bar so it doesn't look ugly
-                window.history.replaceState({}, document.title, window.location.pathname);
+            if (!GEMINI_API_KEY) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlKey = urlParams.get('key') || urlParams.get('gemini');
+                if (urlKey) {
+                    localStorage.setItem('MEI_GEMINI_KEY', urlKey);
+                    GEMINI_API_KEY = urlKey;
+                    
+                    // Erase the key from the browser URL bar so it doesn't look ugly
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
             }
 
             // 2. Attempt to parse local .env file
