@@ -105,41 +105,71 @@
 
         // THE PARTICLE SYSTEM: Affective Leaves
         const Leaf = ({ index, emotion }) => {
-            const size = 30 + Math.random() * 25; // Random size block
-            
-            // Randomize starting properties based on emotion
-            const startX = Math.random() * 100 + 'vw';
-            const startY = Math.random() * 100 + 'vh';
-            const delay = Math.random() * 3;
+            // Generate deterministic organic physics for this specific leaf on mount
+            const leaf = React.useMemo(() => ({
+                size: 20 + Math.random() * 80,           // Massive size variance for depth (foreground/background)
+                startX: Math.random() * 120 - 10,        // Spawns smoothly across width
+                startY: Math.random() * 120 - 10,        // Spawns smoothly across height
+                delay: Math.random() * 5,
+                speed: 0.5 + Math.random(),              // Trajectory speed variance
+                sway: (Math.random() - 0.5) * 40,        // Unique horizontal path turbulence
+                rotStart: Math.random() * 360,           // Start at random angle
+                rotEnd: (Math.random() * 720 + 360) * (Math.random() > 0.5 ? 1 : -1), // Spin direction and speed
+                blur: Math.random() > 0.6 ? Math.random() * 8 : 0, // Depth of Field blur mapping
+                opacity: 0.2 + Math.random() * 0.6       // Organic leaf transparency
+            }), []);
 
             let animate = {};
             let transition = { repeat: Infinity, ease: "linear" };
-            let style = { left: startX, top: startY, width: size, height: size };
+            let style = { 
+                left: `${leaf.startX}vw`, 
+                top: `${leaf.startY}vh`, 
+                width: leaf.size, 
+                height: leaf.size,
+                filter: `blur(${leaf.blur}px)`,
+                opacity: leaf.opacity
+            };
 
             if (emotion === 'neutral') {
-                // Bobbing gently
-                animate = { y: [0, -30, 0], rotate: [-15, 15, -15], x: [0, 20, 0] };
-                transition = { duration: 6 + Math.random() * 5, repeat: Infinity, ease: "easeInOut", delay };
+                // Bobbing gently organically, each leaf sways differently
+                animate = { 
+                    y: [0, leaf.sway * 1.5, 0], 
+                    x: [0, leaf.sway, 0], 
+                    rotate: [leaf.rotStart, leaf.rotStart + (leaf.sway * 2)] 
+                };
+                transition = { duration: 6 * leaf.speed + 4, repeat: Infinity, ease: "easeInOut", delay: leaf.delay };
             } else if (emotion === 'sad') {
-                // Fall gently from top
-                style.top = '-10vh';
-                animate = { y: ['-10vh', '110vh'], x: ['0vw', '15vw', '-10vw'], rotate: [0, 45, -45] };
-                transition = { duration: 15 + Math.random() * 10, repeat: Infinity, ease: "linear", delay };
+                // Fall gently from top through independent paths
+                style.top = '-15vh';
+                animate = { 
+                    y: ['-10vh', '115vh'], 
+                    x: ['0vw', `${leaf.sway}vw`, `${-(leaf.sway)}vw`], 
+                    rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd / 4] 
+                };
+                transition = { duration: 15 * leaf.speed + 10, repeat: Infinity, ease: "linear", delay: leaf.delay };
             } else if (emotion === 'angry') {
-                // Buffeted by strong wind (horizontal blast)
-                style.left = '-10vw';
-                animate = { x: ['-20vw', '120vw'], y: [0, (Math.random() - 0.5) * 100], rotate: [0, 720] };
-                transition = { duration: 1.5 + Math.random() * 2, repeat: Infinity, ease: "easeIn", delay: Math.random() * 1.5 };
+                // Buffeted by strong wind (horizontal blast, independent speeds and massive spins)
+                style.left = '-15vw';
+                animate = { 
+                    x: ['-20vw', '120vw'], 
+                    y: [0, leaf.sway * 4], 
+                    rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd] 
+                };
+                transition = { duration: 1.5 * leaf.speed + 0.5, repeat: Infinity, ease: "easeIn", delay: leaf.delay / 2 };
             } else if (emotion === 'overwhelmed') {
-                // Lots of leaves swirling quickly
+                // Lots of leaves swirling quickly in chaotic vortex paths
                 style.top = '-20vh';
-                animate = { y: ['-20vh', '120vh'], x: [(Math.random() - 0.5) * 50 + 'vw', (Math.random() - 0.5) * 50 + 'vw'], rotate: [0, 360] };
-                transition = { duration: 3 + Math.random() * 4, repeat: Infinity, ease: "linear", delay: Math.random() * 5 };
+                animate = { 
+                    y: ['-20vh', '120vh'], 
+                    x: [`${leaf.sway}vw`, `${-leaf.sway * 2}vw`], 
+                    rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd] 
+                };
+                transition = { duration: 3 * leaf.speed + 2, repeat: Infinity, ease: "linear", delay: leaf.delay };
             }
 
             return (
                 <motion.div
-                    className="absolute opacity-60 drop-shadow-sm pointer-events-none"
+                    className="absolute drop-shadow-sm pointer-events-none"
                     style={style}
                     animate={animate}
                     transition={transition}
@@ -153,7 +183,8 @@
         };
 
         const LeavesSystem = ({ emotion }) => {
-            const numLeaves = emotion === 'overwhelmed' ? 30 : emotion === 'sad' ? 8 : emotion === 'angry' ? 12 : 5;
+            // Increased density to emphasize the rich organic physics
+            const numLeaves = emotion === 'overwhelmed' ? 50 : emotion === 'sad' ? 12 : emotion === 'angry' ? 20 : 8;
             const leaves = Array.from({ length: numLeaves }).map((_, i) => i);
 
             return (
