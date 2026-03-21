@@ -239,9 +239,14 @@
                     <motion.div 
                         animate={isResonating ? { scale: [1, 1.5, 1], opacity: [0.9, 1, 0.9], filter: ["blur(4px)", "blur(12px)", "blur(4px)"] } : { y: [0, -5, 0], opacity: 0.6, scale: 1 }}
                         transition={{ duration: isResonating ? 10 : 8, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-8 h-8 rounded-full mix-blend-screen"
-                        style={{ backgroundColor: glowColor, boxShadow: `0 0 20px ${glowColor}` }}
-                    />
+                        className="w-10 h-10 mix-blend-screen"
+                        style={{ color: glowColor, filter: `drop-shadow(0 0 15px ${glowColor})` }}
+                    >
+                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="currentColor">
+                            <path d="M50 0 C80 30, 95 60, 50 100 C5 60, 20 30, 50 0 Z" />
+                            <path d="M50 10 L50 90" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" fill="none" />
+                        </svg>
+                    </motion.div>
                     {isResonating && (
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} 
