@@ -283,13 +283,15 @@ CORE RULES:
 2. TONE: Calm, poetic but simple, and gentle. Zero clinical language. Zero exclamation marks. Never try to "fix" the problem. 
 3. FORMAT: No lists, no questions unless gently inviting reflection. Just reflect their feelings back softly.`;
 
-                    // FIX: Using gemini-1.5-flash-latest
-                    const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                    // Unshift system prompt directly into the first user message so legacy gemini-pro interprets it flawlessly
+                    apiHistory[0].parts[0].text = `[SYSTEM INIT: ${systemPrompt}]\n\nAction: ${apiHistory[0].parts[0].text}`;
+
+                    // FIX: Using gemini-pro (1.0 tier) as it is universally supported on all free-tier API keys globally
+                    const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
                     const res = await fetch(fetchUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
                             contents: apiHistory, 
                             generationConfig: { temperature: 0.4, maxOutputTokens: 100 } 
                         })
