@@ -88,8 +88,28 @@
             );
         };
 
+        const analyzeSentiment = (text) => {
+            const lText = text.toLowerCase();
+            if (/(hate|angry|mad|furious|scream|annoyed|bad|worse|!!)/.test(lText)) return 'shout';
+            if (/(sad|cry|lonely|depressed|hurt|pain|tears|sorry|scared|heavy|alone|\?)/.test(lText)) return 'cry';
+            if (/(haha|yay|love|happy|joy|glad|excited|lol|lmao|smile|good|great)/.test(lText)) return 'laugh';
+            if (/(hi|hello|hey|okay|fine|sure|yes|no)/.test(lText)) return 'talk';
+            return 'whisper';
+        };
+
+        const volumeColors = {
+            'whisper': { start: '#E6E6FA', end: '#B4D4FF', bg: '#FDFBF7' },
+            'talk': { start: '#D1D5DB', end: '#9CA3AF', bg: '#F3F4F6' },
+            'shout': { start: '#FF7F50', end: '#EF4444', bg: '#FEF2F2' },
+            'laugh': { start: '#FDE047', end: '#F59E0B', bg: '#FFFBEB' },
+            'cry': { start: '#4682B4', end: '#312E81', bg: '#EEF2FF' }
+        };
+
         // 3. THE "PEBBLE" PROXY: A soft, pastel worry-stone
         const PebbleProxy = ({ onClick }) => {
+            const { volume } = useContext(MeiContext);
+            const colors = volumeColors[volume] || volumeColors['whisper'];
+
             const path1 = "M30,25 C60,10 85,25 85,55 C85,85 60,90 30,80 C10,70 5,45 30,25 Z";
             const path2 = "M40,20 C70,15 90,35 80,65 C70,90 40,95 20,75 C5,55 10,25 40,20 Z";
             const path3 = "M50,15 C80,20 95,50 75,80 C55,100 20,85 15,60 C10,35 25,10 50,15 Z";
@@ -97,28 +117,31 @@
             return (
                 <motion.div 
                     drag 
-                    dragConstraints={{ left: -300, right: 300, top: -300, bottom: 300 }}
+                    dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
                     dragElastic={0.2}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={onClick}
-                    className="relative cursor-pointer z-20 flex flex-col items-center group"
+                    className="relative cursor-pointer z-20 flex flex-col items-center group mb-8"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 3, ease: "easeOut" }}
                 >
-                    {/* Breath-sync shadow matching 6 BPM (10s total cycle) */}
+                    {volume === 'shout' && (
+                        <motion.div animate={{ x: [-2, 2, -2] }} transition={{ repeat: Infinity, duration: 0.1 }} className="absolute inset-0" />
+                    )}
                     <motion.div 
                         animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.1, 1] }}
                         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute inset-0 rounded-full blur-2xl bg-volumeWhisper/60"
+                        className="absolute inset-0 rounded-full blur-2xl"
+                        style={{ backgroundColor: colors.start }}
                     />
                     
-                    <svg viewBox="0 0 100 100" className="w-56 h-56 drop-shadow-xl">
+                    <svg viewBox="0 0 100 100" className="w-40 h-40 drop-shadow-xl md:w-56 md:h-56">
                         <defs>
                             <linearGradient id="pebbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#E6E6FA" /> {/* Lavender */}
-                                <stop offset="100%" stopColor="#B4D4FF" /> {/* Soft Sky Blue */}
+                                <motion.stop offset="0%" animate={{ stopColor: colors.start }} transition={{ duration: 2 }} />
+                                <motion.stop offset="100%" animate={{ stopColor: colors.end }} transition={{ duration: 2 }} />
                             </linearGradient>
                             <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
                                 <feGaussianBlur stdDeviation="3" result="blur" />
@@ -142,22 +165,153 @@
             );
         };
 
+        // CHAT INTERFACE: Zero hard lines
+        const ChatFlow = ({ apiKey }) => {
+            const { setVolume } = useContext(MeiContext);
+            const [input, setInput] = useState('');
+            const [messages, setMessages] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const chatEndRef = React.useRef(null);
+
+            const systemInstruction = {
+                "role": "user",
+                "parts": [{ "text": "System Instruction: You are Mei, a bicultural counselor in Greenpoint. You run 'I Don't Know What To Say'. You are calm, friendly, grounded. Never be hyper. Keep responses to 1-2 soft sentences." }]
+            };
+            const systemAck = { "role": "model", "parts": [{ "text": "Understood. I am Mei. I am listening softly." }] };
+
+            useEffect(() => {
+                // Initialize with random opener
+                const openers = [
+                    "Hello there. I'm Mei. I'm glad we can take some time today to focus on pediatric counseling and therapy. I'm here when you're ready.",
+                    "Hi, it's Mei. I just spent a few minutes organizing some art therapy supplies. We can start whenever you feel comfortable.",
+                    "Welcome. I'm Mei. Watching the ferry pass by my window right now always grounds me. I'm ready to listen."
+                ];
+                const startMsg = openers[Math.floor(Math.random() * openers.length)];
+                setMessages([
+                    { role: 'model', text: startMsg },
+                    { role: 'model', text: "How is your body feeling right now? If you had to pick an emoji for your energy today, which one would it be?" }
+                ]);
+            }, []);
+
+            useEffect(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+
+            const handleSend = async (e) => {
+                e.preventDefault();
+                if (!input.trim() || !apiKey) return;
+                
+                const userText = input.trim();
+                setInput('');
+                setMessages(prev => [...prev, { role: 'user', text: userText }]);
+                
+                // Trigger Affective NLP Engine
+                setVolume(analyzeSentiment(userText));
+                setLoading(true);
+
+                // Reconstruct history for Gemini
+                const apiHistory = [systemInstruction, systemAck];
+                messages.forEach(m => {
+                    apiHistory.push({ role: m.role === 'user' ? 'user' : 'model', parts: [{text: m.text}] });
+                });
+                apiHistory.push({ role: 'user', parts: [{text: userText}] });
+
+                try {
+                    const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                    const res = await fetch(fetchUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: apiHistory, generationConfig: { temperature: 0.7, maxOutputTokens: 150 } })
+                    });
+                    
+                    const data = await res.json();
+                    if(data.candidates) {
+                        const reply = data.candidates[0].content.parts[0].text;
+                        setMessages(prev => [...prev, { role: 'model', text: reply }]);
+                    }
+                } catch (err) {
+                    setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I'm having a little trouble connecting. Take a deep breath with me." }]);
+                }
+                setLoading(false);
+            };
+
+            return (
+                <div className="w-full max-w-2xl h-[60vh] flex flex-col z-10 px-6">
+                    <div className="flex-1 overflow-y-auto w-full no-scrollbar pb-8 space-y-8 flex flex-col mask-image-b">
+                        {messages.map((m, i) => (
+                            <motion.div 
+                                key={i}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 1.5, ease: 'easeOut' }}
+                                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <p className={`max-w-[80%] text-lg md:text-2xl font-light leading-relaxed tracking-wide ${m.role === 'user' ? 'text-[#8B7E9A] text-right' : 'text-textSoftDark text-left'}`}>
+                                    {m.text}
+                                </p>
+                            </motion.div>
+                        ))}
+                        {loading && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#8B7E9A] text-lg font-light">mei is thinking...</motion.div>
+                        )}
+                        <div ref={chatEndRef} />
+                    </div>
+                    
+                    <form onSubmit={handleSend} className="relative mt-4">
+                        <input 
+                            type="text" 
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Type gently here..." 
+                            className="w-full bg-white/20 backdrop-blur-md text-textSoftDark placeholder-[#8B7E9A]/50 px-6 py-4 rounded-3xl outline-none focus:bg-white/40 transition-all duration-500 font-light text-xl"
+                        />
+                    </form>
+                    <style>{`
+                        .no-scrollbar::-webkit-scrollbar { display: none; }
+                        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                        .mask-image-b { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
+                    `}</style>
+                </div>
+            );
+        };
+
         // 2. THE LANDING CLEARING SCAFFOLD
         const LandingClearing = () => {
             const { volume, setVolume } = useContext(MeiContext);
             const [interactionPhase, setInteractionPhase] = useState('scaffold');
+            const [apiKey, setApiKey] = useState(null);
 
-            const triggerWhisperIntro = () => {
-                setInteractionPhase('whisper-intro');
+            useEffect(() => {
+                const HARDCODED_PUBLIC_KEY = "AIzaSyDF1HpI1RIFenpJochk1-tba64OZTLiiXw";
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlKey = urlParams.get('key');
+                if (urlKey) { localStorage.setItem('MEI_GEMINI_KEY', urlKey); setApiKey(urlKey); }
+                else if (HARDCODED_PUBLIC_KEY.length > 10) { setApiKey(HARDCODED_PUBLIC_KEY); }
+                else { setApiKey(localStorage.getItem('MEI_GEMINI_KEY')); }
+            }, []);
+
+            const triggerIntro = () => {
+                if(!apiKey) {
+                    const key = prompt("Please enter your Gemini API Key to connect with Mei:");
+                    if(key) { localStorage.setItem('MEI_GEMINI_KEY', key); setApiKey(key); }
+                    else return;
+                }
+                setInteractionPhase('chat');
                 setVolume('whisper');
             };
 
+            const bgClass = volumeColors[volume]?.bg || '#FDFBF7';
+
             return (
-                <div className="w-full h-screen flex flex-col items-center justify-center relative bg-gradient-to-br from-[#FFF5E4] via-[#FDFBF7] to-[#F3E8FF] text-textSoftDark overflow-hidden select-none">
+                <motion.div 
+                    animate={{ backgroundColor: bgClass }}
+                    transition={{ duration: 3 }}
+                    className="w-full h-screen flex flex-col items-center justify-center relative text-textSoftDark overflow-hidden select-none"
+                >
                     <DiffusedCursor />
 
                     {interactionPhase === 'scaffold' && (
-                        <div className="flex flex-col items-center space-y-16 mt-16">
+                        <div className="flex flex-col items-center space-y-16 mt-16 z-20">
                             <motion.h1 
                                 initial={{ opacity: 0, filter: "blur(10px)", y: -20 }}
                                 animate={{ opacity: 0.6, filter: "blur(0px)", y: 0 }}
@@ -167,7 +321,7 @@
                                 THE CLEARING
                             </motion.h1>
                             
-                            <PebbleProxy onClick={triggerWhisperIntro} />
+                            <PebbleProxy onClick={triggerIntro} />
                             
                             <motion.p
                                 initial={{ opacity: 0 }}
@@ -180,30 +334,22 @@
                         </div>
                     )}
 
-                    {interactionPhase === 'whisper-intro' && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ duration: 3, ease: 'easeOut' }}
-                            className="z-10 max-w-2xl text-center px-8"
-                        >
-                            <motion.p 
-                                animate={{ opacity: [0.7, 1, 0.7] }}
-                                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                                className="text-2xl md:text-4xl font-light leading-relaxed text-textSoftDark tracking-wide"
-                            >
-                                "It's safe here. There are no edges. I am Mei, and whenever you are ready, I am already listening."
-                            </motion.p>
-                        </motion.div>
+                    {interactionPhase === 'chat' && (
+                        <>
+                            <div className="absolute top-10 w-full flex justify-center opacity-80 z-0">
+                                <PebbleProxy onClick={() => {}} />
+                            </div>
+                            <ChatFlow apiKey={apiKey} />
+                        </>
                     )}
 
                     {/* Background Heartbeat Rhythm (6 BPM Inhale/Exhale Pulse) */}
                     <motion.div 
                         animate={{ opacity: [0.1, 0.3, 0.1] }}
                         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FFF8F0]/40 via-transparent to-transparent"
+                        className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent z-0"
                     />
-                </div>
+                </motion.div>
             );
         };
 
