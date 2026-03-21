@@ -19,8 +19,8 @@ export default async function handler(req) {
             });
         }
 
-        // UPGRADE: Force target gemini-1.5-flash for modern Google Cloud projects
-        const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // UPGRADE: Force target gemini-2.5-flash for modern Google Cloud projects
+        const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(fetchUrl, {
             method: 'POST',
