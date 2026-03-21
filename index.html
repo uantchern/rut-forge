@@ -246,19 +246,15 @@
 
             const handleSend = async (e) => {
                 e.preventDefault();
-                if (!input.trim() || !apiKey) return;
+                if (!input.trim()) return;
                 
                 const userText = input.trim();
                 setInput('');
                 
-                // 1. Push User message to UI state immediately
                 setMessages(prev => [...prev, { role: 'user', text: userText }]);
-                
-                // 2. Trigger Affective NLP Leaves Engine
                 setVolume(analyzeSentiment(userText));
                 setLoading(true);
 
-                // 3. Format strictly alternating API History for Gemini
                 const rawMessages = [...messages, { role: 'user', text: userText }];
                 const apiHistory = [];
                 
@@ -283,11 +279,15 @@ CORE RULES:
 2. TONE: Calm, poetic but simple, and gentle. Zero clinical language. Zero exclamation marks. Never try to "fix" the problem. 
 3. FORMAT: No lists, no questions unless gently inviting reflection. Just reflect their feelings back softly.`;
 
-                    // Unshift system prompt directly into the first user message so legacy gemini-pro interprets it flawlessly
                     apiHistory[0].parts[0].text = `[SYSTEM INIT: ${systemPrompt}]\n\nAction: ${apiHistory[0].parts[0].text}`;
 
-                    // FIX: Using gemini-pro (1.0 tier) as it is universally supported on all free-tier API keys globally
-                    const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    let fetchUrl = '/api/chat'; // Secure Serverless Architecture Edge Endpoint (Permanent Fix)
+                    
+                    // Local Development Override via ?key= param
+                    if (apiKey) {
+                        fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                    }
+
                     const res = await fetch(fetchUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -300,7 +300,7 @@ CORE RULES:
                     const data = await res.json();
                     
                     if (!res.ok) {
-                        throw new Error(`API: ${data.error?.message || res.status}`);
+                        throw new Error(data.error || data.error?.message || res.statusText || 'Unknown Server Error');
                     }
                     
                     if(data.candidates && data.candidates.length > 0) {
@@ -311,7 +311,7 @@ CORE RULES:
                     console.error("Mei API Error:", err);
                     let displayError = err.message;
                     if (displayError.includes("is not found for API version") || displayError.includes("API key not valid")) {
-                        displayError = "Your Google Gemini API Key is missing, deleted, or expired. Please hard-refresh your browser and enter a valid API Key.";
+                        displayError = "Missing backend proxy or local key. If testing locally, map ?key=YOUR_KEY.";
                     }
                     setMessages(prev => [...prev, { role: 'model', text: `(System Note) Connection Failed: ${displayError}` }]);
                 }
@@ -337,7 +337,6 @@ CORE RULES:
                         {loading && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#8B7E9A] text-xl font-light italic text-right opacity-70">mei is listening...</motion.div>
                         )}
-                        {/* Huge block to push text far up past the boundary when scrollIntoView runs */}
                         <div ref={chatEndRef} className="h-32 shrink-0" />
                     </div>
                     
@@ -353,7 +352,6 @@ CORE RULES:
                     <style>{`
                         .no-scrollbar::-webkit-scrollbar { display: none; }
                         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                        /* Soft radial mask to prevent hard clipping at the absolute top of the screen */
                         .mask-edges { mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 100%); }
                     `}</style>
                 </div>
@@ -367,21 +365,14 @@ CORE RULES:
             const [apiKey, setApiKey] = useState(null);
 
             useEffect(() => {
-                const HARDCODED_PUBLIC_KEY = "";
                 const urlParams = new URLSearchParams(window.location.search);
                 const urlKey = urlParams.get('key');
                 if (urlKey) { localStorage.setItem('MEI_GEMINI_KEY', urlKey); setApiKey(urlKey); }
-                else if (HARDCODED_PUBLIC_KEY.length > 10) { setApiKey(HARDCODED_PUBLIC_KEY); }
                 else { setApiKey(localStorage.getItem('MEI_GEMINI_KEY')); }
             }, []);
 
             const triggerIntro = () => {
                 if (interactionPhase === 'chat') return; // Prevent double trigger
-                if(!apiKey) {
-                    const key = prompt("Please enter your Gemini API Key to connect with Mei:");
-                    if(key) { localStorage.setItem('MEI_GEMINI_KEY', key); setApiKey(key); }
-                    else return;
-                }
                 setInteractionPhase('chat');
                 setVolume('neutral');
             };
