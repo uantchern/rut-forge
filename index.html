@@ -272,17 +272,42 @@
         const input = document.getElementById('chatInput');
 
         // API Architecture Toggles
-        // 1. For Frontend Local Demo Mode (default):
-        let GEMINI_API_KEY = localStorage.getItem('MEI_GEMINI_KEY');
-        if (!GEMINI_API_KEY) {
-            GEMINI_API_KEY = prompt("Please provide your Gemini API Key to power Mei's brain (stored locally only):");
-            if(GEMINI_API_KEY) localStorage.setItem('MEI_GEMINI_KEY', GEMINI_API_KEY);
-        }
-        let FETCH_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // The application will attempt to read the local `.env` file securely without uploading it.
+        // If the `.env` file is missing (e.g., when deployed on the public internet), it will fallback to the local cache.
+        let GEMINI_API_KEY = null;
+        let FETCH_URL = null;
 
-        // 2. For Live Public Backend Mode (once you deploy the Cloudflare Worker):
-        // Comment out blocks 1 and 3 completely, and uncomment this line below with your deployed Worker URL:
-        // let FETCH_URL = "https://mei-backend.<your_cloudflare_username>.workers.dev";
+        async function initializeGeminiKey() {
+            try {
+                // Attempt to natively parse the hidden .env file running on your local server.
+                const envResponse = await fetch('.env');
+                if (envResponse.ok) {
+                    const text = await envResponse.text();
+                    const match = text.match(/MEI_GEMINI_KEY=(.*)/);
+                    if (match && match[1]) {
+                        GEMINI_API_KEY = match[1].trim();
+                        console.log("Successfully loaded Gemini Key from local .env file");
+                    }
+                }
+            } catch (error) {
+                console.log("Could not load local .env file (Running on public host or file:// protocol). Falling back to Local Cache.");
+            }
+
+            // Fallback: If .env completely fails or is not uploaded, check browser's memory.
+            if (!GEMINI_API_KEY) {
+                GEMINI_API_KEY = localStorage.getItem('MEI_GEMINI_KEY');
+                if (!GEMINI_API_KEY) {
+                    GEMINI_API_KEY = prompt("Local .env could not be read. Please enter your Gemini API Key for Mei's brain:");
+                    if(GEMINI_API_KEY) localStorage.setItem('MEI_GEMINI_KEY', GEMINI_API_KEY);
+                }
+            }
+
+            // Bind the active URL (either directly to LLM for testing, or to Cloudflare Proxy if set)
+            FETCH_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        }
+        
+        // Execute initialization immediately
+        initializeGeminiKey();
 
         // Chat History for LLM Memory
         // Security Update: The System Prompt (Mei's personality instructions) has been moved completely to the Backend Proxy.
