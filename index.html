@@ -306,24 +306,29 @@
             );
         };
 
-        // THE FORGE SCAFFOLD: Ember & Slate Phase
-        const IntroForge = () => (
-            <div className="flex flex-col items-center justify-center w-full h-full pointer-events-none z-10 px-8 relative">
-                {/* Synced 6-BPM Breath Engine Pulse */}
-                <motion.div 
-                    animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6], filter: ["blur(12px)", "blur(8px)", "blur(12px)"] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute w-48 h-48 rounded-full bg-[#FF7F50] mix-blend-screen drop-shadow-[0_0_40px_rgba(255,127,80,0.8)]"
-                />
+        // THE FORGE SCAFFOLD: Reverting to softer IntroText
+        const IntroText = () => (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center h-full pointer-events-none z-10 px-8"
+            >
                 <motion.h1 
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 0.9, y: 0 }}
-                    transition={{ duration: 4, delay: 1, ease: "easeOut" }}
-                    className="text-4xl md:text-5xl font-light tracking-widest text-[#F3F4F6] mt-64 w-full text-center mix-blend-screen z-10"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                    className="text-5xl md:text-7xl font-light tracking-widest text-[#5C5470]"
                 >
                     i don't know
                 </motion.h1>
-            </div>
+                <motion.h2 
+                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+                    className="text-3xl md:text-4xl font-light tracking-widest text-[#5C5470]/70 mt-6"
+                >
+                    what to say
+                </motion.h2>
+            </motion.div>
         );
 
         // CHAT INTERFACE
@@ -527,8 +532,6 @@ CORE RULES:
             let bgClass = '';
             if (hidingPlace) {
                 bgClass = '#0a0a0f';
-            } else if (interactionPhase === 'scaffold') {
-                bgClass = '#111827'; // Dark, textured slate
             } else {
                 bgClass = emotionColors[volume] || '#E2E8F0';
             }
@@ -552,7 +555,7 @@ CORE RULES:
                     )}
 
                     {interactionPhase === 'scaffold' && (
-                        <IntroForge />
+                        <IntroText />
                     )}
 
                     {interactionPhase === 'chat' && (
