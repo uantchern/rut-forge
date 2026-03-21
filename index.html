@@ -236,6 +236,21 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            white-space: nowrap; /* Fix mobile text-spill bug */
+            max-width: 90%;
+            justify-content: center;
+        }
+
+        .floating-leaf {
+            display: inline-block;
+            animation: floatLeaf 3s ease-in-out infinite;
+            transform-origin: center center;
+        }
+
+        @keyframes floatLeaf {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(15deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
         }
 
     </style>
@@ -244,7 +259,7 @@
 
     <div class="start-overlay" id="startOverlay">
         <button class="start-btn" onclick="startSession()">
-            <span>Begin Check-In with Mei</span> 🌊
+            <span>Begin Check-In with Mei</span> <span class="floating-leaf">🍃</span>
         </button>
     </div>
 
