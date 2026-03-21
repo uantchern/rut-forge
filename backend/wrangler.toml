@@ -1,0 +1,6 @@
+name = "mei-backend"
+main = "src/index.js"
+compatibility_date = "2024-03-21"
+
+# The Gemini API Key must be deployed as a secret:
+# Run: npx wrangler secret put GEMINI_API_KEY
