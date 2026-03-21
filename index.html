@@ -224,33 +224,38 @@
         }
 
         .start-btn {
-            background: white;
-            color: var(--mei-blue);
-            padding: 16px 32px;
-            font-size: 1.2rem;
-            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #10b981; /* Green color for the grass context */
+            width: 80px;
+            height: 80px;
+            font-size: 2.5rem;
+            border-radius: 50%;
             border: none;
             cursor: pointer;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            font-weight: 600;
             display: flex;
-            align-items: center;
-            gap: 10px;
-            white-space: nowrap; /* Fix mobile text-spill bug */
-            max-width: 90%;
             justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
         }
 
         .floating-leaf {
             display: inline-block;
-            animation: floatLeaf 3s ease-in-out infinite;
-            transform-origin: center center;
+            animation: rustleGrass 4s ease-in-out infinite;
+            transform-origin: bottom center;
         }
 
-        @keyframes floatLeaf {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(15deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
+        @keyframes rustleGrass {
+            0% { transform: rotate(0deg); }
+            15% { transform: rotate(8deg); }
+            30% { transform: rotate(-4deg); }
+            45% { transform: rotate(6deg); }
+            60% { transform: rotate(-2deg); }
+            100% { transform: rotate(0deg); }
         }
 
     </style>
@@ -259,7 +264,7 @@
 
     <div class="start-overlay" id="startOverlay">
         <button class="start-btn" onclick="startSession()">
-            <span>Begin Check-In with Mei</span> <span class="floating-leaf">🍃</span>
+            <span class="floating-leaf">🌿</span>
         </button>
     </div>
 
