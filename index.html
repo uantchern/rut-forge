@@ -194,34 +194,58 @@
                 
                 const userText = input.trim();
                 setInput('');
+                
+                // 1. Push User message to UI state immediately
                 setMessages(prev => [...prev, { role: 'user', text: userText }]);
                 
-                // Trigger Affective NLP Engine
+                // 2. Trigger Affective NLP Engine
                 setVolume(analyzeSentiment(userText));
                 setLoading(true);
 
-                // Reconstruct history for Gemini
-                const apiHistory = [systemInstruction, systemAck];
-                messages.forEach(m => {
-                    apiHistory.push({ role: m.role === 'user' ? 'user' : 'model', parts: [{text: m.text}] });
+                // 3. Format strictly alternating API History for Gemini
+                const rawMessages = [...messages, { role: 'user', text: userText }];
+                const apiHistory = [];
+                
+                rawMessages.forEach(m => {
+                    const mappedRole = m.role === 'user' ? 'user' : 'model';
+                    if (apiHistory.length > 0 && apiHistory[apiHistory.length - 1].role === mappedRole) {
+                        // Concatenate adjacent identical roles to prevent Gemini 400 Bad Request
+                        apiHistory[apiHistory.length - 1].parts[0].text += "\n\n" + m.text;
+                    } else {
+                        apiHistory.push({ role: mappedRole, parts: [{ text: m.text }] });
+                    }
                 });
-                apiHistory.push({ role: 'user', parts: [{text: userText}] });
+
+                // Gemini API strictly requires history to begin with 'user'
+                if (apiHistory.length > 0 && apiHistory[0].role === 'model') {
+                    apiHistory.unshift({ role: 'user', parts: [{ text: "(User enters the clearing silently)" }] });
+                }
 
                 try {
                     const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
                     const res = await fetch(fetchUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: apiHistory, generationConfig: { temperature: 0.7, maxOutputTokens: 150 } })
+                        body: JSON.stringify({ 
+                            systemInstruction: { parts: [{ text: "You are Mei, a bicultural pediatric counselor in Greenpoint. You run 'I Don't Know What To Say'. You are calm, friendly, grounded. Never be hyper. Keep responses to 1-2 soft sentences." }] },
+                            contents: apiHistory, 
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 150 } 
+                        })
                     });
                     
                     const data = await res.json();
-                    if(data.candidates) {
+                    
+                    if (!res.ok) {
+                        throw new Error(`API Error: ${data.error?.message || res.status}`);
+                    }
+                    
+                    if(data.candidates && data.candidates.length > 0) {
                         const reply = data.candidates[0].content.parts[0].text;
                         setMessages(prev => [...prev, { role: 'model', text: reply }]);
                     }
                 } catch (err) {
-                    setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I'm having a little trouble connecting. Take a deep breath with me." }]);
+                    console.error("Mei API Error:", err);
+                    setMessages(prev => [...prev, { role: 'model', text: "I'm sorry, I'm having a little trouble hearing you. Let's take a deep breath and try that again." }]);
                 }
                 setLoading(false);
             };
