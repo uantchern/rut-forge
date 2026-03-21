@@ -307,15 +307,14 @@ CORE RULES:
                     }
                 } catch (err) {
                     console.error("Mei API Error:", err);
-                    setMessages(prev => [...prev, { role: 'model', text: "I am having trouble hearing you clearly right now. Take your time." }]);
+                    setMessages(prev => [...prev, { role: 'model', text: `(System Note) I am having trouble connecting: ${err.message}` }]);
                 }
                 setLoading(false);
             };
 
             return (
-                <div className="w-full max-w-3xl h-[70vh] flex flex-col z-10 px-8 drop-shadow-sm mt-12">
-                    {/* Removed mask-image-b which was hiding the bottom-most text */}
-                    <div className="flex-1 overflow-y-auto w-full no-scrollbar pb-8 space-y-12 flex flex-col">
+                <div className="w-full max-w-3xl h-full flex flex-col z-10 px-8 drop-shadow-sm pt-[15vh] pb-8">
+                    <div className="flex-1 overflow-y-auto w-full no-scrollbar px-2 space-y-12 flex flex-col">
                         {messages.map((m, i) => (
                             <motion.div 
                                 key={i}
@@ -335,7 +334,7 @@ CORE RULES:
                         <div ref={chatEndRef} className="h-4" />
                     </div>
                     
-                    <form onSubmit={handleSend} className="relative mt-4">
+                    <form onSubmit={handleSend} className="relative mt-8 mb-4">
                         <input 
                             type="text" 
                             value={input}
@@ -347,6 +346,8 @@ CORE RULES:
                     <style>{`
                         .no-scrollbar::-webkit-scrollbar { display: none; }
                         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                        /* Soft radial mask to prevent hard clipping at the absolute top of the screen */
+                        .mask-edges { mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 100%); }
                     `}</style>
                 </div>
             );
