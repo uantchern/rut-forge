@@ -91,53 +91,54 @@
         const analyzeSentiment = (text) => {
             const lText = text.toLowerCase();
             if (/(hate|angry|mad|furious|scream|annoyed|bad|worse|!!)/.test(lText)) return 'shout';
-            if (/(sad|cry|lonely|depressed|hurt|pain|tears|sorry|scared|heavy|alone|\?)/.test(lText)) return 'cry';
+            if (/(sad|cry|lonely|depressed|hurt|pain|tears|sorry|scared|heavy|alone|grief|\?)/.test(lText)) return 'cry';
             if (/(haha|yay|love|happy|joy|glad|excited|lol|lmao|smile|good|great)/.test(lText)) return 'laugh';
-            if (/(hi|hello|hey|okay|fine|sure|yes|no)/.test(lText)) return 'talk';
-            return 'whisper';
+            if (/(shh|quiet|whisper|soft|tired|sleepy|gentle)/.test(lText)) return 'whisper';
+            return 'talk'; // Default state when no emotion is strongly detected
         };
 
         const volumeColors = {
             'whisper': { start: '#E6E6FA', end: '#B4D4FF', bg: '#FDFBF7' },
-            'talk': { start: '#D1D5DB', end: '#9CA3AF', bg: '#F3F4F6' },
+            'talk': { start: '#E5E7EB', end: '#D1D5DB', bg: '#FDFCFB' },
             'shout': { start: '#FF7F50', end: '#EF4444', bg: '#FEF2F2' },
             'laugh': { start: '#FDE047', end: '#F59E0B', bg: '#FFFBEB' },
             'cry': { start: '#4682B4', end: '#312E81', bg: '#EEF2FF' }
         };
 
         // 3. THE "PEBBLE" PROXY: A soft, pastel worry-stone
-        const PebbleProxy = ({ onClick }) => {
+        const PebbleProxy = ({ onClick, isChatPhase }) => {
             const { volume } = useContext(MeiContext);
-            const colors = volumeColors[volume] || volumeColors['whisper'];
+            const colors = volumeColors[volume] || volumeColors['talk'];
 
-            const path1 = "M30,25 C60,10 85,25 85,55 C85,85 60,90 30,80 C10,70 5,45 30,25 Z";
-            const path2 = "M40,20 C70,15 90,35 80,65 C70,90 40,95 20,75 C5,55 10,25 40,20 Z";
-            const path3 = "M50,15 C80,20 95,50 75,80 C55,100 20,85 15,60 C10,35 25,10 50,15 Z";
+            // Gentle pebble shapes instead of severe amoebas
+            const path1 = "M40,20 C60,15 80,25 85,50 C90,75 75,90 50,85 C25,80 15,70 15,45 C15,20 20,25 40,20 Z";
+            const path2 = "M45,22 C65,18 85,28 82,53 C79,78 70,88 45,82 C20,76 18,65 18,48 C18,31 25,26 45,22 Z";
+            const path3 = "M42,18 C62,12 82,22 88,48 C94,74 72,92 48,88 C24,84 12,68 12,42 C12,16 22,24 42,18 Z";
 
             return (
                 <motion.div 
                     drag 
-                    dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
+                    dragConstraints={{ left: -300, right: 300, top: -300, bottom: 300 }}
                     dragElastic={0.2}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={onClick}
                     className="relative cursor-pointer z-20 flex flex-col items-center group mb-8"
                     initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    animate={{ opacity: 1, scale: isChatPhase ? 0.6 : 1 }}
                     transition={{ duration: 3, ease: "easeOut" }}
                 >
                     {volume === 'shout' && (
                         <motion.div animate={{ x: [-2, 2, -2] }} transition={{ repeat: Infinity, duration: 0.1 }} className="absolute inset-0" />
                     )}
                     <motion.div 
-                        animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.1, 1] }}
+                        animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.05, 1] }}
                         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute inset-0 rounded-full blur-2xl"
+                        className={`absolute inset-0 rounded-full blur-2xl ${isChatPhase ? 'opacity-40' : 'opacity-100'}`}
                         style={{ backgroundColor: colors.start }}
                     />
                     
-                    <svg viewBox="0 0 100 100" className="w-40 h-40 drop-shadow-xl md:w-56 md:h-56">
+                    <svg viewBox="0 0 100 100" className="w-40 h-40 drop-shadow-lg md:w-56 md:h-56">
                         <defs>
                             <linearGradient id="pebbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <motion.stop offset="0%" animate={{ stopColor: colors.start }} transition={{ duration: 2 }} />
@@ -157,7 +158,7 @@
                             strokeOpacity="0.8"
                             filter="url(#softGlow)"
                         />
-                        <text x="50" y="52" fontSize="9" fill="#5C5470" textAnchor="middle" opacity="0.7" className="font-semibold tracking-[0.2em] pointer-events-none">
+                        <text x="50" y="52" fontSize="9" fill="#5C5470" textAnchor="middle" opacity="0.6" className="font-semibold tracking-[0.2em] pointer-events-none">
                             i don't know
                         </text>
                     </svg>
@@ -236,7 +237,7 @@
             };
 
             return (
-                <div className="w-full max-w-2xl h-[60vh] flex flex-col z-10 px-6">
+                <div className="w-full max-w-2xl h-[65vh] flex flex-col z-10 px-6 drop-shadow-sm">
                     <div className="flex-1 overflow-y-auto w-full no-scrollbar pb-8 space-y-8 flex flex-col mask-image-b">
                         {messages.map((m, i) => (
                             <motion.div 
@@ -254,16 +255,16 @@
                         {loading && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#8B7E9A] text-lg font-light">mei is thinking...</motion.div>
                         )}
-                        <div ref={chatEndRef} />
+                        <div ref={chatEndRef} className="h-4" />
                     </div>
                     
-                    <form onSubmit={handleSend} className="relative mt-4">
+                    <form onSubmit={handleSend} className="relative mt-2">
                         <input 
                             type="text" 
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Type gently here..." 
-                            className="w-full bg-white/20 backdrop-blur-md text-textSoftDark placeholder-[#8B7E9A]/50 px-6 py-4 rounded-3xl outline-none focus:bg-white/40 transition-all duration-500 font-light text-xl"
+                            className="w-full bg-white/40 backdrop-blur-md text-textSoftDark placeholder-[#8B7E9A]/60 px-6 py-4 rounded-3xl outline-none focus:bg-white/60 transition-all duration-500 font-light text-xl shadow-sm"
                         />
                     </form>
                     <style>{`
@@ -297,7 +298,7 @@
                     else return;
                 }
                 setInteractionPhase('chat');
-                setVolume('whisper');
+                setVolume('talk'); // Default to talk phase for chat
             };
 
             const bgClass = volumeColors[volume]?.bg || '#FDFBF7';
@@ -321,7 +322,7 @@
                                 THE CLEARING
                             </motion.h1>
                             
-                            <PebbleProxy onClick={triggerIntro} />
+                            <PebbleProxy onClick={triggerIntro} isChatPhase={false} />
                             
                             <motion.p
                                 initial={{ opacity: 0 }}
@@ -336,8 +337,8 @@
 
                     {interactionPhase === 'chat' && (
                         <>
-                            <div className="absolute top-10 w-full flex justify-center opacity-80 z-0">
-                                <PebbleProxy onClick={() => {}} />
+                            <div className="absolute top-4 right-4 md:top-8 md:right-8 opacity-60 z-20">
+                                <PebbleProxy onClick={() => {}} isChatPhase={true} />
                             </div>
                             <ChatFlow apiKey={apiKey} />
                         </>
