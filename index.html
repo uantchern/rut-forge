@@ -283,8 +283,8 @@ CORE RULES:
 2. TONE: Calm, poetic but simple, and gentle. Zero clinical language. Zero exclamation marks. Never try to "fix" the problem. 
 3. FORMAT: No lists, no questions unless gently inviting reflection. Just reflect their feelings back softly.`;
 
-                    // FIX: Using gemini-1.5-flash as 2.5 does not exist yet for REST
-                    const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                    // FIX: Using gemini-1.5-flash-latest
+                    const fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                     const res = await fetch(fetchUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -298,7 +298,7 @@ CORE RULES:
                     const data = await res.json();
                     
                     if (!res.ok) {
-                        throw new Error(`API Error: ${data.error?.message || res.status}`);
+                        throw new Error(`API: ${data.error?.message || res.status}`);
                     }
                     
                     if(data.candidates && data.candidates.length > 0) {
@@ -331,7 +331,8 @@ CORE RULES:
                         {loading && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#8B7E9A] text-xl font-light italic text-right opacity-70">mei is listening...</motion.div>
                         )}
-                        <div ref={chatEndRef} className="h-4" />
+                        {/* Huge block to push text far up past the boundary when scrollIntoView runs */}
+                        <div ref={chatEndRef} className="h-32 shrink-0" />
                     </div>
                     
                     <form onSubmit={handleSend} className="relative mt-8 mb-4">
