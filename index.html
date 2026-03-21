@@ -345,7 +345,7 @@
             const chatEndRef = useRef(null);
 
             useEffect(() => {
-                setMessages([{ role: 'model', text: "I am time here. I am listening when you are ready to speak." }]);
+                setMessages([{ role: 'model', text: "I'm right here with you. Take as much time as you need." }]);
             }, []);
 
             useEffect(() => {
@@ -467,7 +467,7 @@ CORE RULES:
                     }
                 } catch (err) {
                     console.error("Mei API Error:", err);
-                    setMessages(prev => [...prev, { role: 'model', text: `Words got a little tangled... let's try a whisper instead.` }]);
+                    setMessages(prev => [...prev, { role: 'model', text: `My connection got a little tangled. I'm still right here, let's try that again.` }]);
                 }
                 setLoading(false);
             };
