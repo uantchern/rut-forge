@@ -241,7 +241,7 @@
             }, []);
 
             useEffect(() => {
-                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }, [messages]);
 
             const handleSend = async (e) => {
@@ -309,7 +309,11 @@ CORE RULES:
                     }
                 } catch (err) {
                     console.error("Mei API Error:", err);
-                    setMessages(prev => [...prev, { role: 'model', text: `(System Note) I am having trouble connecting: ${err.message}` }]);
+                    let displayError = err.message;
+                    if (displayError.includes("is not found for API version") || displayError.includes("API key not valid")) {
+                        displayError = "Your Google Gemini API Key is missing, deleted, or expired. Please hard-refresh your browser and enter a valid API Key.";
+                    }
+                    setMessages(prev => [...prev, { role: 'model', text: `(System Note) Connection Failed: ${displayError}` }]);
                 }
                 setLoading(false);
             };
@@ -363,7 +367,7 @@ CORE RULES:
             const [apiKey, setApiKey] = useState(null);
 
             useEffect(() => {
-                const HARDCODED_PUBLIC_KEY = "AIzaSyDF1HpI1RIFenpJochk1-tba64OZTLiiXw";
+                const HARDCODED_PUBLIC_KEY = "";
                 const urlParams = new URLSearchParams(window.location.search);
                 const urlKey = urlParams.get('key');
                 if (urlKey) { localStorage.setItem('MEI_GEMINI_KEY', urlKey); setApiKey(urlKey); }
