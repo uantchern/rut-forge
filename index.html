@@ -437,13 +437,7 @@
                 return; 
             }
             
-            if (step === 10) { 
-                step = -1; 
-                document.getElementById('idkwts-text').style.opacity = '0'; // Hide the hint
-                startWordStorm(10); 
-                step = 11; 
-                return; 
-            }
+            // Step 10 logic dynamically moved to auto-pilot.
             if (step > 7) return; 
             
             pointer.isActive = true; 
@@ -488,12 +482,9 @@
             setTimeout(() => {
                 idkwts.style.opacity = '0';
                 setTimeout(() => { 
-                    step = 10; 
                     locked = false; 
-                    idkwts.innerHTML = "Tap the void to begin";
-                    idkwts.style.fontSize = "1.2rem";
-                    idkwts.style.letterSpacing = "8px";
-                    idkwts.style.opacity = '0.4';
+                    startWordStorm(10);
+                    step = 11;
                 }, 3000);
             }, 6000);
         }
