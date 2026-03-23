@@ -531,18 +531,20 @@
             let w = chosenWords;
 
             const templates = [
-                `We build our identities out of KPIs, performing for permission to exist. But stepping into the <span class='highlight'>${w[0]}</span>, there is nothing to prove and nothing to lose. The <span class='highlight'>${w[1]}</span> does not ask for your credentials; the <span class='highlight'>${w[2]}</span> does not measure your output. When you embrace the 0% Chance Mindset, you unlearn the fear that has kept you clenched. You are allowed to wander through the <span class='highlight'>${w[3]}</span>, guided only by desire. Allow the <span class='highlight'>${w[4]}</span> to remind you that life was never a train on a track. Trust the <span class='highlight'>${w[5]}</span>, roll the dice, and fail on purpose.`,
+                `The weight you have been carrying was never yours to hold. As the swarm scatters into the open light, it carries away the need for certainty, leaving behind only the quiet expanse of the <span class='highlight'>${w[0]}</span>. To walk without a destination is not to be lost, but to finally be found. You are allowed to let the map burn. You are allowed to simply breathe into the <span class='highlight'>${w[1]}</span>, and begin again.`,
                 
-                `In the Cult of Achievement, success becomes our shield against shame, shrinking our world until we forget the feeling of the <span class='highlight'>${w[0]}</span>. But when you deliberately attempt the impossible, the pressure collapses. Standing in the <span class='highlight'>${w[1]}</span>, you realize that failure is not a verdict—it is an experience as profound as the <span class='highlight'>${w[2]}</span>. As you lay down the armor of perfection, the <span class='highlight'>${w[3]}</span> opens up before you. You don’t pick the path because of the destination; you discover the <span class='highlight'>${w[4]}</span> because of the path. Breathe in the <span class='highlight'>${w[5]}</span>. You are finally free to live on purpose.`,
+                `There is a profound stillness waiting for you past the edges of expectation. Look how effortlessly they take flight—unburdened by history, untethered by whatever metric you used to measure your worth. The <span class='highlight'>${w[0]}</span> does not ask you to prove your right to exist. It only asks that you step forward, empty-handed, into the beautiful, unapologetic <span class='highlight'>${w[1]}</span>. Let the currents carry you.`,
                 
-                `Somewhere along the way, success stopped being a direction and became a demand, distancing us from the quiet truth of the <span class='highlight'>${w[0]}</span>. But the moment you embrace guaranteed failure, you break the contract. You step into the <span class='highlight'>${w[1]}</span> and realize the ego has nothing left to defend. The <span class='highlight'>${w[2]}</span> does not judge your missteps; the <span class='highlight'>${w[3]}</span> simply holds space for your exploration. Wayfinding begins when you leave the tracks behind and venture into the <span class='highlight'>${w[4]}</span>. Let the <span class='highlight'>${w[5]}</span> carry you forward. Fail loudly. Fail joyfully. Fail on purpose.`
+                `What if the wrong turn was the only way to reach the horizon? The armor of perfection is heavy, and the sky is too vast to trace safe lines across it. As the wings fold back into the <span class='highlight'>${w[0]}</span>, recognize that your missteps were never mistakes—they were just gravity teaching you how to fly. Lean into the <span class='highlight'>${w[1]}</span>. It is finally safe to let go.`,
+                
+                `You do not have to know the ending to appreciate the rhythm of the journey. Every frantic attempt to control the current only distances you from the quiet power of the <span class='highlight'>${w[0]}</span>. Watch the swarm scatter; watch the absolute chaos resolve into absolute freedom. Relinquish the timeline. Step gently into the <span class='highlight'>${w[1]}</span> and trust that the fall is just a different kind of flight.`
             ];
 
             let rawText = templates[Math.floor(Math.random() * templates.length)];
             textDiv.innerHTML = rawText;
             
             let plainText = rawText.replace(/<[^>]*>?/gm, '');
-            let encodedText = encodeURIComponent(`I just discovered the 0% Chance Mindset:\n\n"${plainText}"\n\nExplore at https://failonpurpose.com`);
+            let encodedText = encodeURIComponent(`A moment of clarity:\n\n"${plainText}"\n\nRead more at https://failonpurpose.com`);
             btn.href = `https://wa.me/?text=${encodedText}`;
 
             finalContainer.style.opacity = '1';
