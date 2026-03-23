@@ -597,30 +597,27 @@
             });
 
             let dominantTheme = Object.keys(themeScores).reduce((a, b) => themeScores[a] > themeScores[b] ? a : b);
-            
-            let primary = w[0].toLowerCase();
-            let secondary = w[w.length - 1].toLowerCase();
 
             const proseMap = {
                 COSMOS: [
-                    `You cannot measure your worth against the <span class='highlight'>${w[0]}</span>. Just look towards the <span class='highlight'>${w[3]}</span> and let go.`,
-                    `You don't have to carry the whole world.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>Gravity loses its hold. You are allowed to fly.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`,
-                    `We spend so much time fighting the current, trying to define our exact coordinates in the world. But precision is overrated. When you look at the <span class='highlight'>${w[0]}</span>, or follow the distant pull of the <span class='highlight'>${w[3]}</span>, you realise that the vastness was never meant to be conquered. It was only meant to be experienced. Stop trying to steer.`
+                    `You cannot measure your worth against the sky. Stop trying to steer, and just let go.`,
+                    `You don't have to carry the world.<br><br>The stars do not ask for your permission.<br><br>Gravity loses its hold. You are allowed to fly.`,
+                    `We spend so much time fighting the current, trying to define our exact coordinates. But precision is terribly overrated. When you look at the vast expanse above, you realise that the void was never meant to be conquered. It was only meant to be experienced. Stop trying to steer the ship.`
                 ],
                 NATURE: [
-                    `The <span class='highlight'>${w[0]}</span> does not ask for permission to exist. Neither should you.`,
-                    `Everything grows exactly as it should.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>Stop forcing the seasons. Let things fall into place.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`,
-                    `There is a strange comfort in accepting that you cannot control the <span class='highlight'>${w[0]}</span>. The natural world simply adapts. If you find yourself lost between the <span class='highlight'>${w[1]}</span> and the <span class='highlight'>${w[2]}</span>, remember that growth requires uncertainty. You do not need absolute clarity to move forward. Trust the <span class='highlight'>${w[3]}</span>, and let the rest burn away.`
+                    `The wild does not ask for permission to exist. Neither should you.`,
+                    `Everything grows exactly as it should.<br><br>Stop forcing the seasons.<br><br>Watch the leaves fall, and let things fall into place.`,
+                    `There is a strange comfort in accepting that you cannot control the forest. The natural world simply adapts. If you find yourself completely lost, remember that growth requires a certain level of uncertainty. You do not need absolute clarity to move forward. Trust the earth, and let the rest burn away.`
                 ],
                 JOURNEY: [
-                    `It is completely fine to wander. The <span class='highlight'>${w[0]}</span> will only appear when you throw away the map.`,
-                    `It is beautiful to wander without a map.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>The destination was never the point. Keep walking.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`,
-                    `Most missteps are not mistakes; they are just unplanned detours teaching you how to navigate. If the path leads you to the unexpected <span class='highlight'>${w[0]}</span>, abandon your original timeline. Let the <span class='highlight'>${w[1]}</span> and the <span class='highlight'>${w[2]}</span> guide you instead. You don't need to know the ending to appreciate the rhythm of the <span class='highlight'>${w[3]}</span>.`
+                    `It is completely fine to wander. The true path only appears when you finally throw away the map.`,
+                    `It is beautiful to walk without a map.<br><br>The destination was never the point.<br><br>The compass is broken. Keep walking anyway.`,
+                    `Most missteps are not mistakes; they are just unplanned detours teaching you how to navigate. If the road leads you entirely off your original timeline, abandon it without regret. Let the journey guide you instead. You do not need to know the ending to appreciate the rhythm of the walk.`
                 ],
                 STILLNESS: [
-                    `Stop fixing what isn't broken. Find the <span class='highlight'>${w[0]}</span>, and just be here for a moment.`,
-                    `Quiet the noise in your mind.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>There is nothing left to fix right now. Just be here.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`,
-                    `We exhaust ourselves searching for meaning, constantly trying to optimize our lives. Sometimes, the most radical act is to simply stop. Focus on the <span class='highlight'>${w[0]}</span>. Let the reality of the <span class='highlight'>${w[1]}</span> wash over you. There is no urgency in the <span class='highlight'>${w[2]}</span>, and there is no judgement in the <span class='highlight'>${w[3]}</span>. Release your breath and rest.`
+                    `Stop fixing what isn't broken. Find the stillness, and just exist here for a moment.`,
+                    `Quiet the noise in your mind.<br><br>There is nothing left to fix right now.<br><br>Release your breath. Just be here.`,
+                    `We exhaust ourselves searching for meaning, constantly trying to optimize our lives. Sometimes, the most radical act is to simply stop. Focus on the absolute quiet. Let the reality of the silence wash over you. There is no urgency in the water, and there is no judgement in the air. Rest.`
                 ]
             };
 
