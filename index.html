@@ -443,7 +443,7 @@
             pointer.isActive = true; 
 
             if ([1, 2, 4, 6].includes(step)) {
-                currentMaxLines = Math.floor(Math.random() * 7) + 3; 
+                currentMaxLines = 35; 
             }
             else if (step === 3 || step === 5) {
                 locked = true; pointer.isActive = false; 
@@ -602,19 +602,19 @@
             let secondary = w[w.length - 1].toLowerCase();
 
             const proseMap = {
-                COSMOS: `The gravity you have been fighting was never yours to hold. As the wings scatter into the open light, they leave behind only the quiet expanse of the <span class='highlight'>${primary}</span>. Look how effortlessly they take flight—unburdened by history, untethered by whatever metric you used to measure your worth. Let the <span class='highlight'>${secondary}</span> remind you that the vastness is not empty, but waiting. It is freely, finally safe to let go.`,
+                COSMOS: `You don't have to carry the whole world.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>Gravity loses its hold. You are allowed to fly.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`,
                 
-                NATURE: `The roots you thought were holding you down were only teaching you how to stand. As the swarm scatters into the open breeze, it carries away the absolute need for a destination. The <span class='highlight'>${primary}</span> does not ask for your credentials; the wild does not measure your output. Let the map burn. You are allowed to wander through the <span class='highlight'>${secondary}</span>. Step forward, empty-handed, and trust the fall.`,
+                NATURE: `Everything grows exactly as it should.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>Stop forcing the seasons. Let things fall into place.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`,
                 
-                JOURNEY: `What if the wrong turn was the only way to reach the horizon? The armor of perfection is exceptionally heavy, and the sky is too vast to trace safe lines across it. As the swarm bursts into the <span class='highlight'>${primary}</span>, recognize that your missteps were never mistakes—they were just gravity teaching you how to fly. Lean into the <span class='highlight'>${secondary}</span>. You do not have to know the ending to appreciate the rhythm of the journey.`,
+                JOURNEY: `It is beautiful to wander without a map.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>The destination was never the point. Keep walking.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`,
                 
-                STILLNESS: `There is a profound quiet waiting for you past the edges of expectation. Every frantic attempt to control the current only distances you from the power of the <span class='highlight'>${primary}</span>. Watch the swarm scatter; watch the absolute chaos resolve into absolute freedom. Relinquish the timeline. Step gently into the <span class='highlight'>${secondary}</span>, release your breath, and simply begin again.`
+                STILLNESS: `Quiet the noise in your mind.<br><br><span class='highlight'>${w[0]}</span>. <span class='highlight'>${w[1]}</span>.<br><br>There is nothing left to fix right now. Just be here.<br><br><span class='highlight'>${w[2]}</span>. <span class='highlight'>${w[3]}</span>.`
             };
 
             let rawText = proseMap[dominantTheme] || proseMap.COSMOS;
             textDiv.innerHTML = rawText;
             
-            let plainText = rawText.replace(/<[^>]*>?/gm, '');
+            let plainText = rawText.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>?/gm, '');
             let encodedText = encodeURIComponent(`A moment of clarity:\n\n"${plainText}"\n\nRead more at https://failonpurpose.com`);
             btn.href = `https://wa.me/?text=${encodedText}`;
 
@@ -649,8 +649,8 @@
                 
                 for (let i = 0; i < nearest.length; i++) {
                     if (linesDrawn >= currentMaxLines) break; 
-                    if (nearest[i].distSq < 60000) {
-                        let opacity = (1 - Math.sqrt(nearest[i].distSq)/244) * 0.8;
+                    if (nearest[i].distSq < 150000) {
+                        let opacity = (1 - Math.sqrt(nearest[i].distSq)/387) * 0.9;
                         ctx.strokeStyle = `rgba(180, 210, 230, ${opacity})`;
                         ctx.beginPath(); ctx.moveTo(pointer.x, pointer.y); ctx.lineTo(nearest[i].p.x, nearest[i].p.y); ctx.stroke();
                         
