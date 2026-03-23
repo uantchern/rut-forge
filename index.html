@@ -570,17 +570,39 @@
             
             let w = chosenWords;
 
-            const templates = [
-                `The weight you have been carrying was never yours to hold. As the swarm scatters into the open light, it carries away the need for certainty, leaving behind only the quiet expanse of the <span class='highlight'>${w[0]}</span>. To walk without a destination is not to be lost, but to finally be found. You are allowed to let the map burn. You are allowed to simply breathe into the <span class='highlight'>${w[1]}</span>, and begin again.`,
-                
-                `There is a profound stillness waiting for you past the edges of expectation. Look how effortlessly they take flight—unburdened by history, untethered by whatever metric you used to measure your worth. The <span class='highlight'>${w[0]}</span> does not ask you to prove your right to exist. It only asks that you step forward, empty-handed, into the beautiful, unapologetic <span class='highlight'>${w[1]}</span>. Let the currents carry you.`,
-                
-                `What if the wrong turn was the only way to reach the horizon? The armor of perfection is heavy, and the sky is too vast to trace safe lines across it. As the wings fold back into the <span class='highlight'>${w[0]}</span>, recognize that your missteps were never mistakes—they were just gravity teaching you how to fly. Lean into the <span class='highlight'>${w[1]}</span>. It is finally safe to let go.`,
-                
-                `You do not have to know the ending to appreciate the rhythm of the journey. Every frantic attempt to control the current only distances you from the quiet power of the <span class='highlight'>${w[0]}</span>. Watch the swarm scatter; watch the absolute chaos resolve into absolute freedom. Relinquish the timeline. Step gently into the <span class='highlight'>${w[1]}</span> and trust that the fall is just a different kind of flight.`
-            ];
+            // Define semantic themes
+            const THEMES = {
+                COSMOS: ["SPACE", "STAR", "GALAXY", "COSMOS", "NIGHT", "MIDNIGHT", "SKY", "VAST", "INFINITY", "VOID", "EXPANSE", "GLOW", "LUMINESCENT", "SPARK", "LIGHT", "SUN", "MOON", "ECLIPSE", "LUNAR", "SOLAR", "ORBIT", "PLANET", "METEOR", "COMET"],
+                NATURE: ["FOREST", "LAKE", "SNOW", "MOUNTAIN", "OCEAN", "RIVER", "VALLEY", "CANYON", "FIELD", "MEADOW", "WILD", "PINE", "POND", "STREAM", "BROOK", "CREEK", "WATERFALL", "WOOD", "TIMBER", "LEAF", "BRANCH", "STEM", "TRUNK", "BARK", "GRASS", "WEED", "FLOWER", "BLOOM"],
+                JOURNEY: ["PATH", "TRAIL", "TRACK", "WANDER", "ROAM", "SEEK", "FIND", "DISCOVER", "PIONEER", "NAVIGATE", "EXPLORE", "FRONTIER", "BORDER", "EDGE", "BEYOND", "CROSSING", "VOYAGE", "TREK", "QUEST", "EXPEDITION", "MARCH", "ODYSSEY", "SAIL", "CRUISE"],
+                STILLNESS: ["CALM", "QUIET", "STILLNESS", "PEACE", "SILENCE", "BREATH", "DRIFT", "WHISPER", "SOLITUDE", "NULL", "EMPTY", "BLANK", "CLEAR", "TRANSPARENT", "PEACEFUL", "FLUID", "TIMELESS", "ABSOLUTE", "ETERNAL", "CHILL", "FREEZE", "FLOAT", "GLIDE"]
+            };
 
-            let rawText = templates[Math.floor(Math.random() * templates.length)];
+            let themeScores = { COSMOS: 0, NATURE: 0, JOURNEY: 0, STILLNESS: 0 };
+            
+            w.forEach(word => {
+                if (THEMES.COSMOS.includes(word)) themeScores.COSMOS++;
+                else if (THEMES.NATURE.includes(word)) themeScores.NATURE++;
+                else if (THEMES.JOURNEY.includes(word)) themeScores.JOURNEY++;
+                else if (THEMES.STILLNESS.includes(word)) themeScores.STILLNESS++;
+            });
+
+            let dominantTheme = Object.keys(themeScores).reduce((a, b) => themeScores[a] > themeScores[b] ? a : b);
+            
+            let primary = w[0].toLowerCase();
+            let secondary = w[w.length - 1].toLowerCase();
+
+            const proseMap = {
+                COSMOS: `The gravity you have been fighting was never yours to hold. As the wings scatter into the open light, they leave behind only the quiet expanse of the <span class='highlight'>${primary}</span>. Look how effortlessly they take flight—unburdened by history, untethered by whatever metric you used to measure your worth. Let the <span class='highlight'>${secondary}</span> remind you that the vastness is not empty, but waiting. It is freely, finally safe to let go.`,
+                
+                NATURE: `The roots you thought were holding you down were only teaching you how to stand. As the swarm scatters into the open breeze, it carries away the absolute need for a destination. The <span class='highlight'>${primary}</span> does not ask for your credentials; the wild does not measure your output. Let the map burn. You are allowed to wander through the <span class='highlight'>${secondary}</span>. Step forward, empty-handed, and trust the fall.`,
+                
+                JOURNEY: `What if the wrong turn was the only way to reach the horizon? The armor of perfection is exceptionally heavy, and the sky is too vast to trace safe lines across it. As the swarm bursts into the <span class='highlight'>${primary}</span>, recognize that your missteps were never mistakes—they were just gravity teaching you how to fly. Lean into the <span class='highlight'>${secondary}</span>. You do not have to know the ending to appreciate the rhythm of the journey.`,
+                
+                STILLNESS: `There is a profound quiet waiting for you past the edges of expectation. Every frantic attempt to control the current only distances you from the power of the <span class='highlight'>${primary}</span>. Watch the swarm scatter; watch the absolute chaos resolve into absolute freedom. Relinquish the timeline. Step gently into the <span class='highlight'>${secondary}</span>, release your breath, and simply begin again.`
+            };
+
+            let rawText = proseMap[dominantTheme] || proseMap.COSMOS;
             textDiv.innerHTML = rawText;
             
             let plainText = rawText.replace(/<[^>]*>?/gm, '');
