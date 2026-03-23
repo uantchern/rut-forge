@@ -288,8 +288,8 @@
                     ctx.translate(-32, -26); 
                     
                     ctx.fillStyle = this.morphColor;
-                    ctx.shadowColor = this.morphColor;
-                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = this.morphColor;
+                    ctx.shadowBlur = 0; // Disabling drop-shadow on swarms to prevent WebKit GPU crash
                     ctx.fill(svgPath2D);
                     
                     ctx.restore();
