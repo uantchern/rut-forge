@@ -416,7 +416,9 @@
 
         window.addEventListener('pointerdown', e => {
             if (locked) return;
-            if (e.target.closest('.storm-word') || e.target.closest('.wa-btn')) return; 
+            if (e.target && typeof e.target.closest === 'function') {
+                if (e.target.closest('.storm-word') || e.target.closest('.wa-btn')) return; 
+            }
             
             updatePointer(e);
 
@@ -435,7 +437,13 @@
                 return; 
             }
             
-            if (step === 10) { step = -1; startWordStorm(10); step = 11; return; }
+            if (step === 10) { 
+                step = -1; 
+                document.getElementById('idkwts-text').style.opacity = '0'; // Hide the hint
+                startWordStorm(10); 
+                step = 11; 
+                return; 
+            }
             if (step > 7) return; 
             
             pointer.isActive = true; 
@@ -479,16 +487,26 @@
             
             setTimeout(() => {
                 idkwts.style.opacity = '0';
-                setTimeout(() => { step = 10; locked = false; }, 3000);
+                setTimeout(() => { 
+                    step = 10; 
+                    locked = false; 
+                    idkwts.innerHTML = "Tap the void to begin";
+                    idkwts.style.fontSize = "1.2rem";
+                    idkwts.style.letterSpacing = "8px";
+                    idkwts.style.opacity = '0.4';
+                }, 3000);
             }, 6000);
         }
 
         function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
+            let temp = array.slice();
+            for (let i = temp.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+                const t = temp[i];
+                temp[i] = temp[j];
+                temp[j] = t;
             }
-            return array;
+            return temp;
         }
 
         function startWordStorm(count) {
