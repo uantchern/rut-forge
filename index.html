@@ -214,8 +214,9 @@
                 } else {
                     this.x += this.vx * (dt * 60); this.y += this.vy * (dt * 60);
                     if (this.mode === 'drift') {
-                        let friction = Math.pow(0.98, dt * 60);
-                        this.vx *= friction; this.vy *= friction;
+                        let spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                        if (spd > 0.4) { this.vx = (this.vx/spd)*0.4; this.vy = (this.vy/spd)*0.4; }
+
                         if (this.x < -20) this.x = width + 20; if (this.x > width + 20) this.x = -20;
                         if (this.y < -20) this.y = height + 20; if (this.y > height + 20) this.y = -20;
                     }
@@ -548,14 +549,14 @@
         }
 
         function triggerUnveilSequence() {
-            canvas.style.opacity = "0";
-            canvas.style.transition = "opacity 6.5s ease";
+            canvas.style.zIndex = "100";
             
             for(let i=0; i<200; i++) particles.push(new Particle('cover'));
             
             setTimeout(() => { triggerFinalParagraph(); }, 3000); 
 
             setTimeout(() => {
+                canvas.style.zIndex = "1";
                 document.getElementById('story-container').style.pointerEvents = 'auto';
             }, 6500);
         }
