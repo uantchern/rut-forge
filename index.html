@@ -479,7 +479,7 @@
             
             setTimeout(() => {
                 idkwts.style.opacity = '0';
-                setTimeout(() => { step = 10; locked = false; particles = []; }, 3000);
+                setTimeout(() => { step = 10; locked = false; }, 3000);
             }, 6000);
         }
 
@@ -657,8 +657,10 @@
                 p.update(dt);
                 p.draw(ctx);
                 
-                if (p.mode === 'cover' && p.hasExploded && (p.x < -200 || p.x > width + 200 || p.y < -200 || p.y > height + 200)) {
-                    particles.splice(i, 1);
+                if ((p.mode === 'cover' && p.hasExploded) || p.mode === 'scatter') {
+                    if (p.x < -200 || p.x > width + 200 || p.y < -200 || p.y > height + 200) {
+                        particles.splice(i, 1);
+                    }
                 }
             }
 
