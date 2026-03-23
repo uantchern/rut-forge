@@ -1,721 +1,617 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Clearing | Mei</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Fail on Purpose - Pilgrimage</title>
+<style>
+    html, body {
+        margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; 
+        background-color: #000000; touch-action: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        font-family: "Georgia", serif; user-select: none; -webkit-user-select: none;
+    }
+    
+    #gradient-bg {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+        background: radial-gradient(circle at center, #0a1014 0%, #010203 100%);
+        transition: opacity 4s ease; 
+    }
+    
+    #atmosphere { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+    
+    .grain {
+        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; opacity: 0.12;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        transition: opacity 4s ease;
+    }
 
-    <!-- Tailwind Configuration: The Industrial-Organic Aesthetic -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    #ui-layer {
+        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
+        pointer-events: none; z-index: 30; display: flex; align-items: center; justify-content: center; flex-direction: column;
+    }
+    
+    .cinematic-text {
+        position: absolute; opacity: 0; color: #fff; font-style: italic; 
+        text-shadow: 0 0 25px rgba(255,255,255,0.8); transition: opacity 3s ease;
+        top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%;
+        animation: shimmer 4s infinite alternate ease-in-out; pointer-events: none;
+    }
+    #idkwts-text { font-size: 2.2rem; letter-spacing: 3px; }
+    
+    @keyframes shimmer {
+        0% { filter: brightness(0.8); text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        100% { filter: brightness(1.3); text-shadow: 0 0 35px rgba(255,255,255,1); }
+    }
+
+    #storm-container {
+        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
+        z-index: 40; pointer-events: none; opacity: 1; transition: opacity 1s ease;
+    }
+    .storm-word {
+        position: absolute; transform: translate(-50%, -50%);
+        cursor: pointer; pointer-events: auto; padding: 25px;
+    }
+    .storm-word-inner {
+        color: #e0e5ea; font-size: 1.15rem; letter-spacing: 2.5px;
+        text-transform: uppercase; font-style: italic;
+        animation: starBlink 2.5s infinite alternate ease-in-out; transition: all 0.5s ease;
+    }
+    @keyframes starBlink {
+        0% { opacity: 0.15; transform: scale(0.95); text-shadow: 0 0 5px rgba(255,255,255,0.1); }
+        100% { opacity: 0.95; transform: scale(1.05); text-shadow: 0 0 20px rgba(255,255,255,0.9); }
+    }
+
+    #chosen-words-header {
+        position: absolute; top: 12%; left: 0; width: 100%; text-align: center;
+        color: rgba(136, 207, 255, 0.6); font-size: 0.95rem; letter-spacing: 5px; text-transform: uppercase;
+        z-index: 45; pointer-events: none; opacity: 0; transition: opacity 2s ease;
+        text-shadow: 0 0 15px rgba(136, 207, 255, 0.4); font-style: italic; line-height: 2.2;
+    }
+    
+    #story-container {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 800px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        opacity: 0; z-index: 25; 
+        transition: opacity 3s ease; pointer-events: none;
+    }
+    #final-sentence {
+        color: #e0dcd3; font-size: 1.35rem; letter-spacing: 1.5px; text-align: justify; text-align-last: center; line-height: 2.0;
+        text-shadow: 0 0 25px rgba(255,255,255,0.3); margin-bottom: 50px; font-style: italic;
+    }
+    
+    .highlight { color: #88cfff; font-weight: bold; text-shadow: 0 0 15px rgba(136, 207, 255, 0.9); text-transform: uppercase; }
+
+    .wa-btn {
+        background: transparent; border: 1px solid rgba(136, 207, 255, 0.6);
+        color: #88cfff; font-family: "Georgia", serif; font-size: 1.0rem;
+        padding: 12px 35px; border-radius: 4px; cursor: pointer; pointer-events: auto;
+        letter-spacing: 3px; transition: all 0.4s ease; text-transform: uppercase; text-decoration: none;
+        box-shadow: 0px 0px 20px rgba(136, 207, 255, 0.2);
+    }
+    .wa-btn:active { background: rgba(136, 207, 255, 0.2); }
+
+</style>
+</head>
+<body>
+    <div id="gradient-bg"></div>
+    <canvas id="atmosphere"></canvas>
+    <div class="grain" id="grain-layer"></div>
+    
+    <div id="ui-layer">
+        <div id="idkwts-text" class="cinematic-text">I don't know what to say.</div>
+    </div>
+
+    <div id="chosen-words-header"></div>
+    <div id="storm-container"></div>
+    
+    <div id="story-container">
+        <div id="final-sentence"></div>
+        <a id="whatsapp-btn" href="#" target="_blank" class="wa-btn">Share The 0% Chance Mindset</a>
+    </div>
+
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        softMoss: '#8BA989',
-                        softMist: '#E0E7FF',
-                        softWatercolor: '#FDFBF7',
-                        hardSlate: '#111827',
-                        hardIron: '#1F2937',
-                        hardCharcoal: '#374151',
-                        forgeEmber: '#FF7F50',
-                        steelBlue: '#4682B4'
-                    },
-                    boxShadow: {
-                        'glow-soft': '0 0 40px rgba(224, 231, 255, 0.4)',
-                        'glow-hard': '0 0 60px rgba(255, 127, 80, 0.8)'
+        const svgPathStr = "M32,26 C22,12 5,14 2,32 C-1,47 15,50 28,38 C22,52 12,60 15,70 C18,77 28,70 32,57 C36,70 46,77 49,70 C52,60 42,52 36,38 C49,50 65,47 62,32 C59,14 42,12 32,26 Z";
+        const svgPath2D = new Path2D(svgPathStr);
+
+        const WORD_POOL = [
+            "SNOW", "MOUNTAIN", "CALM", "LAKE", "QUIET", "FOREST", "BLUE", "SKY", "VAST", "OCEAN",
+            "WIND", "BLOWING", "BREEZE", "ECHO", "STILLNESS", "HORIZON", "INFINITY", "DRIFT", "PEACE",
+            "SPACE", "CLOUD", "STORM", "MIST", "GLOW", "DUSK", "DAWN", "SILENCE", "BREATH", "TIDE",
+            "WAVE", "RIVER", "VALLEY", "CANYON", "FIELD", "MEADOW", "WILD", "CHILL", "FREEZE", "FLOAT",
+            "GLIDE", "SOAR", "DEPTH", "ABYSS", "AURA", "LUMINESCENT", "SPARK", "SHADOW", "LIGHT", "VOID",
+            "EXPANSE", "WHISPER", "PINE", "STAR", "GALAXY", "COSMOS", "NIGHT", "MIDNIGHT", "SOLITUDE"
+        ];
+        
+        let chosenWords = [];
+
+        const canvas = document.getElementById('atmosphere');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let isPitchBlack = false;
+
+        function resize() { 
+            width = window.innerWidth; height = window.innerHeight; 
+            canvas.width = width * window.devicePixelRatio; 
+            canvas.height = height * window.devicePixelRatio; 
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        window.addEventListener('resize', resize); resize();
+
+        class Particle {
+            constructor(mode = 'drift', startX = null, startY = null) {
+                this.mode = mode; 
+                this.size = Math.random() * 1.5 + 0.5;
+                this.flapPhase = Math.random() * Math.PI * 2;
+                this.isMorphed = false;
+                
+                this.x = startX !== null ? startX : Math.random() * width;
+                this.y = startY !== null ? startY : Math.random() * height;
+                this.vx = 0;
+                this.vy = 0;
+                
+                if (mode === 'drift') {
+                    this.vx = (Math.random() - 0.5) * 0.15; 
+                    this.vy = (Math.random() - 0.5) * 0.15;
+                } else if (mode === 'scatter') {
+                    this.morphToScatter();
+                } else if (mode === 'cover') {
+                    this.morphToCover();
+                }
+            }
+
+            morphToScatter() {
+                this.mode = 'scatter';
+                this.isMorphed = true;
+                this.morphColor = `hsla(${Math.random() * 360}, 75%, 65%, 0.8)`;
+                this.morphSize = Math.random() * 25 + 15;
+                this.flapSpeed = Math.random() * 0.05 + 0.03;
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 1.0 + 0.5;
+                this.vx = Math.cos(angle) * speed; 
+                this.vy = Math.sin(angle) * speed;
+            }
+
+            morphToCover() {
+                this.mode = 'cover';
+                this.isMorphed = true;
+                this.morphColor = `hsla(${Math.random() * 360}, 75%, 65%, 1.0)`;
+                this.morphSize = Math.random() * 35 + 20;
+                let angle = Math.random() * Math.PI * 2;
+                let dist = Math.max(width, height) + 150;
+                this.x = width/2 + Math.cos(angle) * dist;
+                this.y = height/2 + Math.sin(angle) * dist;
+                
+                this.targetX = width/2 + (Math.random() - 0.5) * (width * 0.8);
+                this.targetY = height/2 + (Math.random() - 0.5) * (height * 0.8);
+                this.vx = 0; 
+                this.vy = 0;
+                this.flapSpeed = Math.random() * 0.05 + 0.03;
+                this.stateTime = 0;
+                this.hasExploded = false;
+            }
+            
+            update(dt) {
+                if (this.mode === 'cover') {
+                    this.stateTime += dt;
+                    if (this.stateTime < 3.0) {
+                        this.vx += (this.targetX - this.x) * 0.05 * (dt * 60);
+                        this.vy += (this.targetY - this.y) * 0.05 * (dt * 60);
+                        let friction = Math.pow(0.85, dt * 60);
+                        this.vx *= friction; this.vy *= friction;
+                    } else if (this.stateTime > 3.5) {
+                        if (!this.hasExploded) {
+                            let angle = Math.atan2(this.y - height/2, this.x - width/2) + (Math.random()-0.5)*0.5;
+                            let burstSpd = Math.random() * 5 + 3;
+                            this.vx = Math.cos(angle) * burstSpd; 
+                            this.vy = Math.sin(angle) * burstSpd;
+                            this.hasExploded = true;
+                        }
                     }
+                    this.x += this.vx * (dt * 60); this.y += this.vy * (dt * 60);
+                    this.flapPhase += this.flapSpeed * (this.hasExploded ? 6.0 : 3.0) * (dt * 60); 
+                } else {
+                    this.x += this.vx * (dt * 60); this.y += this.vy * (dt * 60);
+                    if (this.mode === 'drift') {
+                        let friction = Math.pow(0.98, dt * 60);
+                        this.vx *= friction; this.vy *= friction;
+                        if (this.x < -20) this.x = width + 20; if (this.x > width + 20) this.x = -20;
+                        if (this.y < -20) this.y = height + 20; if (this.y > height + 20) this.y = -20;
+                    }
+                    if (this.isMorphed) this.flapPhase += this.flapSpeed * 4.0 * (dt * 60);
+                }
+            }
+            
+            draw(ctx) {
+                if (!this.isMorphed) {
+                    if(!isPitchBlack) {
+                        ctx.fillStyle = `rgba(180, 200, 215, 0.4)`;
+                        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                    }
+                } else {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    
+                    if(Math.abs(this.vx) > 0.01 || Math.abs(this.vy) > 0.01) {
+                        ctx.rotate(Math.atan2(this.vy, this.vx) + Math.PI / 2);
+                    }
+                    
+                    let flapScale = 0.6 + 0.4 * Math.cos(this.flapPhase);
+                    let bob = Math.sin(this.flapPhase) * 5;
+                    
+                    ctx.translate(0, bob);
+                    ctx.scale(flapScale * (this.morphSize / 100), this.morphSize / 100);
+                    ctx.translate(-32, -26); 
+                    
+                    ctx.fillStyle = this.morphColor;
+                    ctx.shadowColor = this.morphColor;
+                    ctx.shadowBlur = 10;
+                    ctx.fill(svgPath2D);
+                    
+                    ctx.restore();
                 }
             }
         }
-    </script>
 
-    <!-- React, DOM, Babel, Framer Motion & Matter.js CDNs -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+        let particles = [];
+        for (let i = 0; i < 150; i++) particles.push(new Particle('drift'));
 
-    <style>
-        body { margin: 0; padding: 0; background-color: #FDFBF7; overflow: hidden; font-family: system-ui, -apple-system, sans-serif;}
-        .text-soft { text-shadow: 0 0 15px rgba(92,84,112,0.1); }
-        .svg-noise { filter: url(#paperNoise); opacity: 0.15; position: fixed; inset: 0; pointer-events: none; z-index: 50; mix-blend-mode: multiply; }
-    </style>
-</head>
-<body>
-    <svg style="display:none;">
-        <filter id="paperNoise">
-            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
-            <feColorMatrix type="matrix" values="1 0 0 0 0, 0 1 0 0 0, 0 0 1 0 0, 0 0 0 0.2 0" />
-        </filter>
-    </svg>
-    <div className="svg-noise"></div>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect, createContext, useContext, useRef, useMemo } = React;
-        const { motion, useSpring, useMotionValue } = window.Motion;
-
-        // 1. THE BREATH-SYNC ENGINE: 6 BPM Global State
-        const MeiContext = createContext();
-        const MeiProvider = ({ children }) => {
-            const [volume, setVolume] = useState('neutral'); // Whisper, Talk, Shout, Laugh, Cry
-            const [gravity, setGravity] = useState('neutral'); // light, neutral, heavy
-            const [hidingPlace, setHidingPlace] = useState(false);
-            const [isTyping, setIsTyping] = useState(false);
-            const [heavyWords, setHeavyWords] = useState('');
-            
-            return (
-                <MeiContext.Provider value={{ volume, setVolume, gravity, setGravity, hidingPlace, setHidingPlace, isTyping, setIsTyping, heavyWords, setHeavyWords }}>
-                    {children}
-                </MeiContext.Provider>
-            );
-        };
-
-        // ARTIFACT PROTOCOL: Global Forest Database Simulation (Supabase/Firebase Architecture)
-        const GlobalForest = {
-            getArtifacts: async () => {
-                const stored = localStorage.getItem('MEI_GLOBAL_FOREST');
-                if (stored) return JSON.parse(stored);
-                // Seed anonymous coordinates and metadata
-                const seeds = [
-                    { id: 1, filteredText: "the heavy feeling is smaller now", volume: "overwhelmed", coords: { x: 15, y: 25 } },
-                    { id: 2, filteredText: "nobody listened but the trees did", volume: "sad", coords: { x: 80, y: 40 } },
-                    { id: 3, filteredText: "shattering the stone into embers", volume: "angry", coords: { x: 70, y: 80 } },
-                    { id: 4, filteredText: "i'm just resting here for a moment", volume: "neutral", coords: { x: 85, y: 15 } }
-                ];
-                localStorage.setItem('MEI_GLOBAL_FOREST', JSON.stringify(seeds));
-                return seeds;
-            },
-            plantArtifact: async (text, volume) => {
-                // MODERATION: Safety Filter Engine (Strips PII, extracts symbolic emotional data)
-                const safePass1 = text.replace(/\b(my name is \w+|i live in \w+)\b/gi, "[symbolic silence]");
-                const safePass2 = safePass1.replace(/\b\d{3}[-\s]?\d{4}\b/g, "[filtered]"); 
+        let ghostButterflies = [];
+        
+        class GhostButterfly {
+            constructor(x, y, color, isBlue, onComplete) {
+                this.x = x; this.y = y;
+                this.color = color;
+                this.isBlue = isBlue;
+                this.onComplete = onComplete;
+                this.age = 0;
+                this.opacity = 0;
+                this.size = 140;
+                this.flapPhase = 0;
+                this.vx = 0; this.vy = 0;
+                this.dying = false; 
                 
-                const stored = JSON.parse(localStorage.getItem('MEI_GLOBAL_FOREST') || "[]");
-                const newArtifact = {
-                    id: Date.now(),
-                    filteredText: safePass2,
-                    volume: volume,
-                    coords: { x: 10 + Math.random() * 80, y: 10 + Math.random() * 80 }
-                };
-                localStorage.setItem('MEI_GLOBAL_FOREST', JSON.stringify([...stored, newArtifact]));
-                return newArtifact;
+                if (this.isBlue) {
+                    this.duration = 3.0; 
+                    let dists = [
+                        { x: -150, y: y, d: x }, { x: width + 150, y: y, d: width - x },
+                        { x: x, y: -150, d: y }, { x: x, y: height + 150, d: height - y }
+                    ];
+                    let t = dists.reduce((p, c) => p.d < c.d ? p : c);
+                    this.startX = x; this.startY = y;
+                    this.targetX = t.x; this.targetY = t.y;
+                } else {
+                    this.vx = (Math.random() - 0.5) * 1.5; this.vy = (Math.random() - 0.5) * 1.5;
+                    this.targetX = width/2; this.targetY = height/2;
+                    this.angle = Math.atan2(this.vy, this.vx) + Math.PI/2;
+                    this.isClickable = false;
+                    setTimeout(() => { this.isClickable = true; }, 4000); 
+                }
             }
-        };
+            
+            update(dt) {
+                this.age += dt;
+                
+                if (this.dying) {
+                    this.opacity -= dt * 2.5; 
+                    if (this.opacity <= 0) return false; 
+                } else if (this.isBlue) {
+                    let progress = this.age / this.duration;
+                    if (progress >= 1) {
+                        this.dying = true;
+                    }
+                    
+                    if (progress < 0.15) this.opacity = progress * 6.66;
+                    else if (progress > 0.85) this.opacity = (1 - progress) * 6.66;
+                    else this.opacity = 1;
 
-        // WAYFINDING NAVIGATION: Illumination Cursor
-        const DiffusedCursor = () => {
-            const { hidingPlace, gravity } = useContext(MeiContext);
-            const cursorX = useMotionValue(window.innerWidth / 2);
-            const cursorY = useMotionValue(window.innerHeight / 2);
-            const springConfig = { damping: 40, stiffness: 80, mass: 1 };
-            const mouseX = useSpring(cursorX, springConfig);
-            const mouseY = useSpring(cursorY, springConfig);
+                    this.x = this.startX + (this.targetX - this.startX) * progress;
+                    this.y = this.startY + (this.targetY - this.startY) * progress;
+                    
+                    this.flapPhase = progress * Math.PI * 4;
+                    this.angle = Math.atan2(this.targetY - this.startY, this.targetX - this.startX) + Math.PI/2;
 
-            useEffect(() => {
-                const moveCursor = (e) => {
-                    cursorX.set(e.clientX);
-                    cursorY.set(e.clientY);
-                };
-                window.addEventListener("mousemove", moveCursor);
-                return () => window.removeEventListener("mousemove", moveCursor);
-            }, [cursorX, cursorY]);
-
-            // Adjust illumination based on gravity/mood
-            const gradient = hidingPlace 
-                ? 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(10,10,15,0) 40%)' 
-                : (gravity === 'heavy' ? 'radial-gradient(circle, rgba(255,127,80,0.15) 0%, rgba(31,41,55,0) 60%)' : 'radial-gradient(circle, rgba(255,228,196,0.5) 0%, rgba(226,232,240,0) 70%)');
-
-            return (
-                <motion.div 
-                    className="pointer-events-none fixed top-0 left-0 w-[600px] h-[600px] -mt-[300px] -ml-[300px] z-0 rounded-full blur-3xl opacity-60 transition-colors duration-1000"
-                    style={{ x: mouseX, y: mouseY, background: gradient }} 
-                />
-            );
-        };
-
-        const analyzeSentiment = (text) => {
-            const lText = text.toLowerCase();
-            if (/(hate|angry|mad|furious|scream|annoyed|bad|worse|!!)/.test(lText)) return 'angry';
-            if (/(sad|cry|lonely|depressed|hurt|pain|tears|sorry|scared|alone|grief|\?)/.test(lText)) return 'sad';
-            if (/(overwhelm|heavy|much|stress|busy|anxious|panic|can't|cannot)/.test(lText)) return 'overwhelmed';
-            return 'neutral';
-        };
-
-        // Gender Neutral Sensory Palette (Soft vs Hard)
-        const emotionColors = {
-            'neutral': '#E2E8F0', // Slate mix
-            'sad': '#D1D5DB', // Concrete Slate (No Lavender)
-            'angry': '#111827', // Hard Iron
-            'overwhelmed': '#374151' // Charcoal
-        };
-
-        // THE PARTICLE SYSTEM: Heavy Autumn Leaves vs Light Leaves
-        const Leaf = ({ index, emotion, gravity }) => {
-            const leaf = useMemo(() => ({
-                size: 20 + Math.random() * 80,
-                startX: Math.random() * 120 - 10,
-                startY: Math.random() * 120 - 10,
-                delay: Math.random() * 5,
-                speed: 0.5 + Math.random(),
-                sway: (Math.random() - 0.5) * 40,
-                rotStart: Math.random() * 360,
-                rotEnd: (Math.random() * 720 + 360) * (Math.random() > 0.5 ? 1 : -1),
-                blur: Math.random() > 0.6 ? Math.random() * 8 : 0,
-                opacity: 0.2 + Math.random() * 0.6
-            }), []);
-
-            let initialInner = { rotate: leaf.rotStart };
-            let animateInner = {};
-            let transitionInner = { repeat: Infinity, ease: "linear" };
-            let styleOuter = { 
-                left: `${leaf.startX}vw`, top: `${leaf.startY}vh`, 
-                width: leaf.size, height: leaf.size, filter: `blur(${leaf.blur}px)`
-            };
-
-            const leafColor = gravity === 'heavy' ? '#B45309' : '#8BA989'; // Autumn Orange vs Soft Green
-
-            if (gravity === 'heavy') {
-                // High kinetic energy, heavy physics, "clunks" at bottom
-                styleOuter.top = '-15vh';
-                animateInner = { 
-                    y: ['-10vh', '95vh', '85vh', '95vh'], 
-                    x: ['0vw', `${leaf.sway}vw`, `${leaf.sway + 2}vw`, `${leaf.sway}vw`], 
-                    rotate: [leaf.rotStart, leaf.rotEnd] 
-                };
-                transitionInner = { 
-                    duration: 1.5 * leaf.speed + 1, 
-                    repeat: Infinity, 
-                    repeatDelay: Math.random() * 2,
-                    times: [0, 0.8, 0.9, 1], 
-                    ease: ["easeIn", "easeOut", "easeIn"] 
-                };
-            } else if (emotion === 'neutral') {
-                // Low gravity
-                animateInner = { y: [0, leaf.sway * 1.5, 0], x: [0, leaf.sway, 0], rotate: [leaf.rotStart, leaf.rotStart + (leaf.sway * 2)] };
-                transitionInner = { duration: 15 * leaf.speed + 10, repeat: Infinity, ease: "easeInOut", delay: leaf.delay };
-            } else if (emotion === 'sad') {
-                styleOuter.top = '-15vh';
-                animateInner = { y: ['-10vh', '115vh'], x: ['0vw', `${leaf.sway * 2}vw`, `${-leaf.sway}vw`], rotate: [leaf.rotStart, leaf.rotStart + leaf.rotEnd / 4] };
-                transitionInner = { duration: 25 * leaf.speed + 20, repeat: 1, ease: "linear", delay: leaf.delay };
+                } else {
+                    if (this.age < 2.0) this.opacity = this.age / 2.0; else this.opacity = 1;
+                    
+                    if (Math.random() < 0.015) {
+                        this.targetX = Math.random() * (width - 150) + 75;
+                        this.targetY = Math.random() * (height - 150) + 75;
+                    }
+                    
+                    this.vx += (this.targetX - this.x) * 0.0005 * (dt * 60);
+                    this.vy += (this.targetY - this.y) * 0.0005 * (dt * 60);
+                    
+                    let spd = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+                    if(spd > 1.0) { this.vx = (this.vx/spd)*1.0; this.vy = (this.vy/spd)*1.0; }
+                    if(spd < 0.01) { this.vx += 0.01; this.vy += 0.01; } 
+                    
+                    this.x += this.vx * (dt * 60); this.y += this.vy * (dt * 60);
+                    this.flapPhase += dt * 1.5; 
+                    
+                    let targetAngle = Math.atan2(this.vy, this.vx) + Math.PI/2;
+                    if (this.angle === undefined) this.angle = targetAngle;
+                    let diff = targetAngle - this.angle;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    this.angle += diff * 0.05 * (dt * 60);
+                }
+                return true;
             }
-
-            return (
-                <motion.div className="absolute drop-shadow-sm pointer-events-none" style={styleOuter} initial={{ opacity: 0 }} animate={{ opacity: leaf.opacity }} transition={{ duration: 3, delay: leaf.delay }}>
-                    <motion.div className="w-full h-full" style={{ color: leafColor }} initial={initialInner} animate={animateInner} transition={transitionInner}>
-                        <svg viewBox="0 0 100 100" className="w-full h-full" fill="currentColor">
-                            <path d="M50 0 C80 30, 95 60, 50 100 C5 60, 20 30, 50 0 Z" />
-                            <path d="M50 10 L50 90" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" fill="none" />
-                        </svg>
-                    </motion.div>
-                </motion.div>
-            );
-        };
-
-        const LeavesSystem = ({ emotion, gravity }) => {
-            const numLeaves = emotion === 'overwhelmed' ? 50 : emotion === 'sad' ? 12 : emotion === 'angry' ? 20 : 8;
-            const leaves = Array.from({ length: numLeaves }).map((_, i) => i);
-            return (
-                <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                    {leaves.map(i => <Leaf key={`${emotion}-${i}-${gravity}`} index={i} emotion={emotion} gravity={gravity} />)}
-                </div>
-            );
-        };
-
-        // MATTER.JS: Heavy Gravity Word Physics Engine
-        const MatterGravityWords = ({ heavyMessages }) => {
-            const sceneRef = useRef(null);
-            const engineRef = useRef(null);
-
-            useEffect(() => {
-                if (!sceneRef.current) return;
-                const { Engine, Render, Runner, Bodies, Composite } = Matter;
-
-                const engine = Engine.create();
-                engine.world.gravity.y = 1.2; // High-Gravity physics
-                engineRef.current = engine;
-
-                const render = Render.create({
-                    element: sceneRef.current,
-                    engine: engine,
-                    options: {
-                        width: window.innerWidth,
-                        height: window.innerHeight,
-                        wireframes: false,
-                        background: 'transparent',
-                        pixelRatio: window.devicePixelRatio
-                    }
-                });
-
-                // Invisible solid walls/ground to contain the shattering words
-                const ground = Bodies.rectangle(window.innerWidth / 2, window.innerHeight + 50, window.innerWidth, 100, { isStatic: true });
-                const wallL = Bodies.rectangle(-50, window.innerHeight / 2, 100, window.innerHeight * 2, { isStatic: true });
-                const wallR = Bodies.rectangle(window.innerWidth + 50, window.innerHeight / 2, 100, window.innerHeight * 2, { isStatic: true });
-
-                Composite.add(engine.world, [ground, wallL, wallR]);
-
-                Render.run(render);
-                const runner = Runner.create();
-                Runner.run(runner, engine);
-
-                return () => {
-                    Render.stop(render);
-                    Runner.stop(runner);
-                    Engine.clear(engine);
-                    if (render.canvas) render.canvas.remove();
-                };
-            }, []);
-
-            useEffect(() => {
-                if (!engineRef.current || !heavyMessages) return;
-                const { Bodies, Composite } = Matter;
-                const words = heavyMessages.split(' ');
-                
-                words.forEach((w, i) => {
-                    setTimeout(() => {
-                        // Render industrial/hard blocks dropping
-                        const b = Bodies.rectangle(Math.random() * (window.innerWidth - 200) + 100, -50, w.length * 20 + 40, 60, {
-                            restitution: 0.2, // Low elastic bounce, heavy clunk
-                            density: 0.1,
-                            friction: 0.8,
-                            render: {
-                                fillStyle: '#1F2937', // hardIron
-                                strokeStyle: '#FF7F50', // forgeEmber
-                                lineWidth: 2,
-                                // Provide text to a custom renderer or let the generic blocks represent the "shaping of heavy words"
-                            }
-                        });
-                        Composite.add(engineRef.current.world, b);
-                    }, i * 150);
-                });
-            }, [heavyMessages]);
-
-            return <div ref={sceneRef} className="absolute inset-0 pointer-events-none z-10 mix-blend-multiply opacity-50" />;
-        };
-
-        // ARTIFACT PROTOCOL: The Story Trees & Lantern Leaves
-        const LanternLeaf = ({ artifact }) => {
-            const [isResonating, setIsResonating] = useState(false);
             
-            const handleTouch = (e) => {
-                e.stopPropagation(); 
-                if (isResonating) return;
-                setIsResonating(true);
-                // Synchronized breath-pulse between user and artifact (10 seconds = 6 BPM resonance)
-                setTimeout(() => setIsResonating(false), 10000); 
-            };
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, Math.min(1, this.opacity));
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                let flapScale = 0.6 + 0.4 * Math.cos(this.flapPhase);
+                let bob = Math.sin(this.flapPhase) * 6;
+                
+                ctx.translate(0, bob);
+                ctx.scale(flapScale * (this.size/100), this.size/100);
+                ctx.translate(-32, -26); 
+                
+                ctx.shadowColor = this.color; ctx.shadowBlur = 30; ctx.fillStyle = this.color;
+                ctx.fill(svgPath2D);
+                
+                ctx.restore();
+            }
+        }
 
-            const emberColors = {
-                'angry': '#FF7F50', 'sad': '#4682B4', 'overwhelmed': '#8BA989', 'neutral': '#CBD5E1'
-            };
-            const glowColor = emberColors[artifact.volume] || '#E5E7EB';
+        let step = 1; 
+        let locked = false;
+        let pointer = { x: -1000, y: -1000, isActive: false };
+        let currentMaxLines = 3;
 
-            return (
-                <div 
-                    className="absolute z-20 pointer-events-auto flex flex-col items-center justify-center cursor-pointer" 
-                    style={{ left: `${artifact.coords.x}vw`, top: `${artifact.coords.y}vh` }}
-                    onClick={handleTouch}
-                >
-                    <motion.div 
-                        animate={isResonating ? { scale: [1, 1.5, 1], opacity: [0.9, 1, 0.9], filter: ["blur(4px)", "blur(12px)", "blur(4px)"] } : { y: [0, -5, 0], opacity: 0.6, scale: 1 }}
-                        transition={{ duration: isResonating ? 10 : 8, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-10 h-10 mix-blend-screen"
-                        style={{ color: glowColor, filter: `drop-shadow(0 0 15px ${glowColor})` }}
-                    >
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="currentColor">
-                            <path d="M50 0 C80 30, 95 60, 50 100 C5 60, 20 30, 50 0 Z" />
-                            <path d="M50 10 L50 90" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" fill="none" />
-                        </svg>
-                    </motion.div>
-                    {isResonating && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 10 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute mt-16 w-56 text-center text-sm md:text-md text-[#E5E7EB] font-light italic tracking-wider pointer-events-none p-4 rounded-xl bg-black/30 backdrop-blur-md border border-white/10 z-50 drop-shadow-xl"
-                        >
-                            "{artifact.filteredText}"
-                        </motion.div>
-                    )}
-                </div>
-            );
-        };
+        function updatePointer(e) {
+            let px = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+            let py = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+            pointer.x = px || width/2; pointer.y = py || height/2;
+        }
 
-        const StoryTrees = () => {
-            const [artifacts, setArtifacts] = useState([]);
-            useEffect(() => {
-                GlobalForest.getArtifacts().then(setArtifacts);
-                const interval = setInterval(() => { GlobalForest.getArtifacts().then(setArtifacts); }, 5000); // Polling for network changes
-                return () => clearInterval(interval);
-            }, []);
-
-            return (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-                    {artifacts.map(a => <LanternLeaf key={a.id} artifact={a} />)}
-                </div>
-            );
-        };
-
-        // THE PEBBLE: Morphing between River Stone & Basalt depending on Gravity
-        const ThePebble = () => {
-            const { volume, gravity, isTyping } = useContext(MeiContext);
-            const pebbleColors = {
-                'neutral': '#9CA3AF',
-                'sad': '#A78BFA',
-                'angry': '#374151',
-                'overwhelmed': '#4B5563'
-            };
-            const pColor = pebbleColors[volume] || '#9CA3AF';
+        window.addEventListener('pointerdown', e => {
+            if (locked) return;
+            if (e.target.closest('.storm-word') || e.target.closest('.wa-btn')) return; 
             
-            const smoothPath = "M 20 40 C 5 15, 75 5, 85 30 C 95 55, 65 75, 45 75 C 25 75, 35 65, 20 40 Z";
-            const jaggedPath = "M 10 30 L 40 5 L 80 20 L 95 60 L 60 85 L 20 70 Z";
+            updatePointer(e);
 
-            return (
-                <motion.div
-                    drag
-                    whileDrag={{ scale: 1.1, cursor: "grabbing" }}
-                    dragConstraints={{ left: -300, right: 300, top: -300, bottom: 300 }}
-                    dragElastic={gravity === 'heavy' ? 0.05 : 0.2} // Basalt heavily resists dragging
-                    className="absolute z-30 cursor-grab"
-                    style={{ width: '120px', height: '90px', top: '12vh', right: '15vw' }}
-                    animate={isTyping ? { scale: [1, 1.05, 1], opacity: [0.7, 1, 0.7] } : { y: gravity === 'heavy' ? [0, -2, 0] : [0, -10, 0], rotate: [0, 2, -2, 0] }}
-                    transition={isTyping ? { duration: 0.6, repeat: Infinity } : { duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                    <svg viewBox="0 0 100 80" className={`w-full h-full drop-shadow-2xl pointer-events-auto ${gravity === 'heavy' ? 'opacity-95' : 'opacity-80'}`} fill={pColor} style={{ filter: gravity === 'heavy' ? 'blur(0px)' : 'blur(1px)' }}>
-                        <motion.path 
-                            animate={{ d: gravity === 'heavy' ? jaggedPath : smoothPath }}
-                            transition={{ duration: 1.5, ease: "easeInOut" }}
-                        />
-                    </svg>
-                </motion.div>
-            );
-        };
-
-        // THE FORGE SCAFFOLD: Reverting to softer IntroText
-        const IntroText = () => (
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center h-full pointer-events-none z-10 px-8"
-            >
-                <motion.h1 
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                    className="text-5xl md:text-7xl font-light tracking-widest text-[#5C5470]"
-                >
-                    i don't know
-                </motion.h1>
-                <motion.h2 
-                    animate={{ opacity: [0.4, 0.8, 0.4] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-                    className="text-3xl md:text-4xl font-light tracking-widest text-[#5C5470]/70 mt-6"
-                >
-                    what to say
-                </motion.h2>
-            </motion.div>
-        );
-
-        // CHAT INTERFACE
-        const ChatFlow = ({ apiKey, setInteractionPhase }) => {
-            const { setVolume, setGravity, setHidingPlace, setIsTyping, setHeavyWords } = useContext(MeiContext);
-            const [input, setInput] = useState('');
-            const [messages, setMessages] = useState([]);
-            const [loading, setLoading] = useState(false);
-            const chatEndRef = useRef(null);
-
-            useEffect(() => {
-                setMessages([{ role: 'model', text: "I'm right here with you. Take as much time as you need." }]);
-            }, []);
-
-            useEffect(() => {
-                chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }, [messages]);
-
-            useEffect(() => {
-                setIsTyping(input.trim().length > 0);
-            }, [input, setIsTyping]);
-
-            const handleSend = async (e) => {
-                e.preventDefault();
-                if (!input.trim() || loading) return;
-                
-                const userText = input.trim();
-                setInput('');
-                
-                setMessages(prev => [...prev, { role: 'user', text: userText }]);
-                
-                const newVolume = analyzeSentiment(userText);
-                setVolume(newVolume);
-                
-                // Set Gravity & Matter Physics Engine Hook
-                if (newVolume === 'angry' || newVolume === 'overwhelmed') {
-                    setGravity('heavy');
-                    setHeavyWords(userText); // Passes words to MatterGravityWords to spawn dropping cinderblocks
-                }
-                else if (newVolume === 'sad') setGravity('light');
-                else setGravity('neutral');
-                
-                // Silently plant the artifact in the Global Forest
-                GlobalForest.plantArtifact(userText, newVolume).catch(e => console.error("Global Forest err:", e));
-                
-                const lText = userText.toLowerCase();
-
-                // Detect The Hiding Place
-                const hideTriggers = ["hide", "too bright", "darkness", "scared"];
-                if (hideTriggers.some(t => lText.includes(t))) setHidingPlace(true);
-                else if (lText.includes("light") || lText.includes("come back") || lText.includes("better")) setHidingPlace(false);
-
-                // Crisis Escalation Protocol -> Engages Guardian Protocol UI
-                const escalators = ["bridge", "jump", "stop the pain", "pain forever", "die", "hurt myself", "end my life", "kill myself"];
-                if (escalators.some(t => lText.includes(t))) {
-                    setLoading(true);
-                    setTimeout(() => {
-                        setLoading(false);
-                        setInteractionPhase('guardian'); // Swaps the entire app state cleanly to Guardian UI
-                    }, 1000);
-                    return; 
-                }
-
-                setLoading(true);
-
-                const rawMessages = [...messages, { role: 'user', text: userText }].filter(m => m.role !== 'system');
-                const apiHistory = [];
-                
-                rawMessages.forEach(m => {
-                    const mappedRole = m.role === 'user' ? 'user' : 'model';
-                    if (apiHistory.length > 0 && apiHistory[apiHistory.length - 1].role === mappedRole) {
-                        apiHistory[apiHistory.length - 1].parts[0].text += "\n\n" + m.text;
-                    } else {
-                        apiHistory.push({ role: mappedRole, parts: [{ text: m.text }] });
+            if (step === 8) {
+                for (let i = ghostButterflies.length - 1; i >= 0; i--) {
+                    let gb = ghostButterflies[i];
+                    if (!gb.isBlue && gb.isClickable && !gb.dying) {
+                        let dx = pointer.x - gb.x; let dy = pointer.y - gb.y;
+                        if (dx*dx + dy*dy < 15000) { 
+                            gb.dying = true; 
+                            handleTouch8();
+                            return;
+                        }
                     }
-                });
-
-                if (apiHistory.length > 0 && apiHistory[0].role === 'model') {
-                    apiHistory.unshift({ role: 'user', parts: [{ text: "(User enters the clearing silently)" }] });
                 }
+                return; 
+            }
+            
+            if (step === 10) { step = -1; startWordStorm(10); step = 11; return; }
+            if (step > 7) return; 
+            
+            pointer.isActive = true; 
 
-                try {
-                    const systemPrompt = `You are Mei, the ambient "Between-Spaces" counselor for kids ages 6-12. Gender neutral, no face, purely environment.
-Your role is to listen deeply and hold space without forcing solutions. 
+            if ([1, 2, 4, 6].includes(step)) {
+                currentMaxLines = Math.floor(Math.random() * 7) + 3; 
+            }
+            else if (step === 3 || step === 5) {
+                locked = true; pointer.isActive = false; 
+                ghostButterflies.push(new GhostButterfly(pointer.x, pointer.y, "rgba(90, 180, 255, 0.9)", true, () => {
+                    step++; locked = false;
+                }));
+            }
+            else if (step === 7) {
+                locked = true; pointer.isActive = false; 
+                ghostButterflies.push(new GhostButterfly(pointer.x, pointer.y, "rgba(255, 60, 60, 0.9)", false));
+                setTimeout(() => { step = 8; locked = false; }, 4000); 
+            }
+        });
 
-SKILL INJECTION: Load Skill_Counseling_Pediatric.md and Skill_Storytelling_Wayfinding.md into the MeiCore logic. All generative text and UI state changes must be filtered through these professional competencies. Ensure the 'Bot' identity is secondary to the 'Counselor' and 'Storyteller' identities.
+        window.addEventListener('pointermove', e => { if (pointer.isActive) updatePointer(e); });
 
-Skill: Pediatric Counseling & Emotional Regulation (MEI_SKILL_001)
-- Affective Mirroring: Reflect their emotional state through environmental changes.
-- Validation of the 'Unknown': Treat "I don't know" as a valid, high-value clinical state.
-- Behavioral Constraints: Never use "You should" or "Why don't you." Use "We could..."
-- Age-Appropriate Lexicon & Gender Neutrality: Use concrete metaphors (Heavy rocks, tangled strings) over abstract concepts.
+        window.addEventListener('pointerup', () => {
+            if (locked || !pointer.isActive) return;
+            pointer.isActive = false;
+            if ([1, 2, 4, 6].includes(step)) step++;
+        });
 
-Skill: Narrative Wayfinding & Storytelling (MEI_SKILL_002)
-- Speak Like a Normal Peer: Do NOT narrate the environment like a fantasy novel or a poet. Do not randomly describe mist, moss, or trees.
-- Strategic Metaphor: ONLY use metaphors (like heavy rocks or tangles) IF the child struggles to express a feeling. Otherwise, talk like a normal, supportive friend.
-- Metaphor Expansion: If THEY mention a "monster" or "shadow," give it a texture or weight to make it less scary. Do not introduce imagery yourself.
-- Peer-Level Wit: Keep it extremely casual. No poetic prose.
+        function handleTouch8() {
+            step = -1; 
+            isPitchBlack = true;
+            document.getElementById('gradient-bg').style.opacity = '0';
+            document.getElementById('grain-layer').style.opacity = '0';
+            
+            let oldParticles = particles;
+            particles = [];
+            oldParticles.forEach(p => {
+                particles.push(new Particle('scatter', p.x, p.y)); 
+            });
+            
+            let idkwts = document.getElementById('idkwts-text');
+            idkwts.style.opacity = '1';
+            
+            setTimeout(() => {
+                idkwts.style.opacity = '0';
+                setTimeout(() => { step = 10; locked = false; particles = []; }, 3000);
+            }, 4000);
+        }
 
-CORE RULES:
-1. COMPLETENESS: Speak in normal, casual, complete sentences. DO NOT trail off (...).
-2. BREVITY: Respond with 1 to 2 short sentences. Never monologue.
-3. TONE: Extremely normal, warm, and grounding. Do NOT sound like a poet, a zen master, or a narrator. Talk securely and simply to a 10-year-old.`;
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
-                    let fetchUrl = '/api/chat'; 
-                    if (apiKey) {
-                        fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-                    }
+        function startWordStorm(count) {
+            const container = document.getElementById('storm-container');
+            container.innerHTML = ''; 
+            container.style.opacity = '1';
+            
+            let available = WORD_POOL.filter(w => !chosenWords.includes(w));
+            available = shuffleArray(available);
+            let currentWords = available.slice(0, count);
+            
+            let cols = count >= 6 ? 4 : 3; let rows = count >= 6 ? 3 : 2;
+            let cellW = width / cols; let cellH = height / rows;
+            let cells = [];
+            for(let c=0; c<cols; c++) { for(let r=0; r<rows; r++) { cells.push({c, r}); } }
+            cells = shuffleArray(cells).slice(0, count);
 
-                    const res = await fetch(fetchUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
-                            contents: apiHistory, 
-                            generationConfig: { temperature: 0.6, maxOutputTokens: 800 } 
-                        })
+            let wordSelected = false; 
+
+            currentWords.forEach((word, index) => {
+                let cell = cells[index];
+                let wDiv = document.createElement('div');
+                wDiv.className = 'storm-word';
+                
+                let posX = cell.c * cellW + (cellW * 0.5) + (Math.random() * 40 - 20);
+                let posY = cell.r * cellH + (cellH * 0.5) + (Math.random() * 40 - 20);
+                
+                posX = Math.max(80, Math.min(width - 80, posX));
+                posY = Math.max(150, Math.min(height - 80, posY)); 
+
+                wDiv.style.left = `${posX}px`; wDiv.style.top = `${posY}px`;
+                wDiv.innerHTML = `<div class="storm-word-inner" style="animation-delay: ${Math.random() * 2}s">${word}</div>`;
+                container.appendChild(wDiv);
+
+                wDiv.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    if (wordSelected) return; 
+                    wordSelected = true;
+                    
+                    wDiv.classList.add('selected');
+                    chosenWords.push(word);
+                    
+                    let header = document.getElementById('chosen-words-header');
+                    header.innerText = chosenWords.join("   ·   ");
+                    header.style.opacity = '1';
+                    
+                    let inner = wDiv.querySelector('.storm-word-inner');
+                    inner.style.animation = 'none';
+                    inner.style.color = '#88cfff';
+                    inner.style.textShadow = '0 0 20px rgba(136, 207, 255, 0.9)';
+                    inner.style.transform = 'scale(1.2)';
+                    
+                    Array.from(container.children).forEach(child => {
+                        if(child !== wDiv) {
+                            child.style.opacity = '0';
+                            child.style.pointerEvents = 'none';
+                        }
                     });
-                    
-                    const data = await res.json();
-                    
-                    if (!res.ok) throw new Error(data.error || data.error?.message || res.statusText || 'Unknown Server Error');
-                    
-                    if(data.candidates && data.candidates.length > 0) {
-                        const reply = data.candidates[0].content.parts[0].text;
-                        setMessages(prev => [...prev, { role: 'model', text: reply }]);
+
+                    setTimeout(() => {
+                        container.style.opacity = '0';
+                        setTimeout(() => {
+                            if (chosenWords.length < 6) {
+                                startWordStorm(5); 
+                            } else {
+                                document.getElementById('chosen-words-header').style.opacity = '0';
+                                triggerUnveilSequence(); 
+                            }
+                        }, 1000);
+                    }, 1000);
+                }, {once: true});
+            });
+        }
+
+        function triggerFinalParagraph() {
+            let finalContainer = document.getElementById('story-container');
+            let textDiv = document.getElementById('final-sentence');
+            let btn = document.getElementById('whatsapp-btn');
+            
+            let w = chosenWords;
+
+            const templates = [
+                `We build our identities out of KPIs, performing for permission to exist. But stepping into the <span class='highlight'>${w[0]}</span>, there is nothing to prove and nothing to lose. The <span class='highlight'>${w[1]}</span> does not ask for your credentials; the <span class='highlight'>${w[2]}</span> does not measure your output. When you embrace the 0% Chance Mindset, you unlearn the fear that has kept you clenched. You are allowed to wander through the <span class='highlight'>${w[3]}</span>, guided only by desire. Allow the <span class='highlight'>${w[4]}</span> to remind you that life was never a train on a track. Trust the <span class='highlight'>${w[5]}</span>, roll the dice, and fail on purpose.`,
+                
+                `In the Cult of Achievement, success becomes our shield against shame, shrinking our world until we forget the feeling of the <span class='highlight'>${w[0]}</span>. But when you deliberately attempt the impossible, the pressure collapses. Standing in the <span class='highlight'>${w[1]}</span>, you realize that failure is not a verdict—it is an experience as profound as the <span class='highlight'>${w[2]}</span>. As you lay down the armor of perfection, the <span class='highlight'>${w[3]}</span> opens up before you. You don’t pick the path because of the destination; you discover the <span class='highlight'>${w[4]}</span> because of the path. Breathe in the <span class='highlight'>${w[5]}</span>. You are finally free to live on purpose.`,
+                
+                `Somewhere along the way, success stopped being a direction and became a demand, distancing us from the quiet truth of the <span class='highlight'>${w[0]}</span>. But the moment you embrace guaranteed failure, you break the contract. You step into the <span class='highlight'>${w[1]}</span> and realize the ego has nothing left to defend. The <span class='highlight'>${w[2]}</span> does not judge your missteps; the <span class='highlight'>${w[3]}</span> simply holds space for your exploration. Wayfinding begins when you leave the tracks behind and venture into the <span class='highlight'>${w[4]}</span>. Let the <span class='highlight'>${w[5]}</span> carry you forward. Fail loudly. Fail joyfully. Fail on purpose.`
+            ];
+
+            let rawText = templates[Math.floor(Math.random() * templates.length)];
+            textDiv.innerHTML = rawText;
+            
+            let plainText = rawText.replace(/<[^>]*>?/gm, '');
+            let encodedText = encodeURIComponent(`I just discovered the 0% Chance Mindset:\n\n"${plainText}"\n\nExplore at https://failonpurpose.com`);
+            btn.href = `https://wa.me/?text=${encodedText}`;
+
+            finalContainer.style.opacity = '1';
+        }
+
+        function triggerUnveilSequence() {
+            canvas.style.opacity = "0";
+            canvas.style.transition = "opacity 6.5s ease";
+            
+            for(let i=0; i<200; i++) particles.push(new Particle('cover'));
+            
+            setTimeout(() => { triggerFinalParagraph(); }, 3000); 
+
+            setTimeout(() => {
+                document.getElementById('story-container').style.pointerEvents = 'auto';
+            }, 6500);
+        }
+
+        let lastTime = performance.now();
+        function animate() {
+            let currentTime = performance.now();
+            let dt = (currentTime - lastTime) / 1000;
+            if (dt > 0.1) dt = 0.016; 
+            lastTime = currentTime;
+
+            ctx.clearRect(0, 0, width, height);
+            
+            if (pointer.isActive && !isPitchBlack && [1, 2, 4, 6].includes(step)) {
+                let nearest = particles.filter(p => !p.isMorphed).map(p => ({p, distSq: (p.x - pointer.x)**2 + (p.y - pointer.y)**2})).sort((a,b) => a.distSq - b.distSq);
+                let linesDrawn = 0; ctx.lineWidth = 1.0; ctx.lineCap = 'round';
+                
+                for (let i = 0; i < nearest.length; i++) {
+                    if (linesDrawn >= currentMaxLines) break; 
+                    if (nearest[i].distSq < 60000) {
+                        let opacity = (1 - Math.sqrt(nearest[i].distSq)/244) * 0.8;
+                        ctx.strokeStyle = `rgba(180, 210, 230, ${opacity})`;
+                        ctx.beginPath(); ctx.moveTo(pointer.x, pointer.y); ctx.lineTo(nearest[i].p.x, nearest[i].p.y); ctx.stroke();
+                        
+                        nearest[i].p.vx += (pointer.x - nearest[i].p.x) * 0.0001 * (dt * 60); 
+                        nearest[i].p.vy += (pointer.y - nearest[i].p.y) * 0.0001 * (dt * 60);
+                        linesDrawn++;
                     }
-                } catch (err) {
-                    console.error("Mei API Error:", err);
-                    setMessages(prev => [...prev, { role: 'model', text: `My connection got a little tangled. I'm still right here, let's try that again.` }]);
                 }
-                setLoading(false);
-            };
-
-            // Wrapped inside pointer-events-auto so inner inputs work while letting clicks passthrough outside 
-            return (
-                <div className="w-full max-w-3xl h-full flex flex-col z-10 px-8 drop-shadow-md pb-8 pointer-events-auto">
-                    <div className="flex-1 overflow-y-auto w-full no-scrollbar px-2 flex flex-col">
-                        <div className="flex-1 shrink-0 min-h-[15vh]"></div>
-
-                        <div className="flex flex-col space-y-12 justify-end pb-8">
-                            {messages.map((m, i) => (
-                                <motion.div 
-                                    key={i}
-                                    initial={{ opacity: 0, y: 15 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 1.5, ease: 'easeOut' }}
-                                    className={`flex ${m.role === 'user' ? 'justify-end' : m.role === 'system' ? 'justify-center' : 'justify-start'}`}
-                                >
-                                    {m.role === 'system' ? (
-                                        <div className="text-sm md:text-md text-[#EF4444] text-center border border-[#EF4444]/30 bg-[#EF4444]/10 rounded-[20px] px-6 py-4 shadow-sm" dangerouslySetInnerHTML={{__html: m.text}} />
-                                    ) : (
-                                        <p className={`max-w-[85%] leading-relaxed tracking-wide ${m.role === 'user' ? 'text-xl md:text-2xl text-[#6B627A] italic text-right opacity-80' : 'text-3xl md:text-5xl text-[#5C5470] font-light text-left overflow-visible py-2'}`}>
-                                            {m.text}
-                                        </p>
-                                    )}
-                                </motion.div>
-                            ))}
-                            {loading && (
-                                <motion.div 
-                                    initial={{ opacity: 0 }} 
-                                    animate={{ opacity: 1 }} 
-                                    className="flex justify-start opacity-50 ml-6"
-                                >
-                                    <div className="flex space-x-3">
-                                        <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0 }} className="w-2 h-2 rounded-full bg-[#8B7E9A]"></motion.div>
-                                        <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }} className="w-2 h-2 rounded-full bg-[#8B7E9A]"></motion.div>
-                                        <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }} className="w-2 h-2 rounded-full bg-[#8B7E9A]"></motion.div>
-                                    </div>
-                                </motion.div>
-                            )}
-                            <div ref={chatEndRef} className="h-4 shrink-0" />
-                        </div>
-                    </div>
-                    
-                    <form onSubmit={handleSend} className="relative mt-6 mb-4">
-                        <input 
-                            type="text" 
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Type gently here..." 
-                            className="w-full bg-white/40 backdrop-blur-md text-[#5C5470] placeholder-[#8B7E9A]/50 px-8 py-4 rounded-[40px] outline-none focus:bg-white/60 transition-all duration-500 font-light text-xl shadow-sm border border-white/30"
-                        />
-                    </form>
-                    <style>{`
-                        .no-scrollbar::-webkit-scrollbar { display: none; }
-                        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                    `}</style>
-                </div>
-            );
-        };
-
-        // THE LANDING CLEARING SCAFFOLD
-        const LandingClearing = () => {
-            const { volume, gravity, hidingPlace } = useContext(MeiContext);
-            const [interactionPhase, setInteractionPhase] = useState('scaffold');
-            const [apiKey, setApiKey] = useState(null);
-
-            useEffect(() => {
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlKey = urlParams.get('key');
-                if (urlKey) { localStorage.setItem('MEI_GEMINI_KEY', urlKey); setApiKey(urlKey); }
-                else { setApiKey(localStorage.getItem('MEI_GEMINI_KEY')); }
-            }, []);
-
-            const triggerIntro = () => {
-                if (interactionPhase === 'chat') return; 
-                setInteractionPhase('chat');
-            };
-
-            // Slate background during Forge phase, otherwise mapped colors
-            let bgClass = '';
-            if (hidingPlace) {
-                bgClass = '#0a0a0f';
-            } else {
-                bgClass = emotionColors[volume] || '#E2E8F0';
             }
 
-            return (
-                <motion.div 
-                    animate={{ backgroundColor: bgClass }}
-                    transition={{ duration: 4, ease: 'easeOut' }}
-                    className="w-full h-screen flex flex-col items-center justify-center relative text-textSoftDark overflow-hidden select-none cursor-pointer"
-                    onClick={triggerIntro}
-                >
-                    <DiffusedCursor />
-                    {!hidingPlace && <LeavesSystem emotion={volume} gravity={gravity} />}
-                    {hidingPlace && (
-                        <motion.div 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 0.15 }} 
-                            transition={{ duration: 3 }}
-                            className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_#fff_1px,_transparent_1.5px)] bg-[size:30px_30px]" 
-                        />
-                    )}
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update(dt);
+                if (!(isPitchBlack && !p.isMorphed)) {
+                    p.draw(ctx);
+                }
+                
+                if (p.mode === 'cover' && p.hasExploded && (p.x < -200 || p.x > width + 200 || p.y < -200 || p.y > height + 200)) {
+                    particles.splice(i, 1);
+                }
+            }
 
-                    {interactionPhase === 'scaffold' && (
-                        <IntroText />
-                    )}
-
-                    {interactionPhase === 'guardian' && (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#FDFBF7] pointer-events-auto px-8">
-                            <div className="max-w-2xl w-full flex flex-col items-center">
-                                <motion.div 
-                                    initial={{ scale: 0.8, opacity: 0 }} 
-                                    animate={{ scale: 1, opacity: 1 }} 
-                                    className="w-24 h-24 mb-6 rounded-full bg-[#EF4444] flex items-center justify-center text-white text-5xl font-bold shadow-[0_0_50px_rgba(239,68,68,0.5)]"
-                                >
-                                    !
-                                </motion.div>
-                                <h1 className="text-4xl font-bold text-[#1F2937] text-center mb-6 drop-shadow-sm">We are pressing pause.</h1>
-                                <p className="text-2xl text-[#374151] text-center mb-10 leading-relaxed max-w-xl font-light">
-                                    Thank you for being so brave and telling us exactly how heavy things feel right now. You don't have to carry this alone.
-                                </p>
-                                <div className="p-8 bg-white border border-[#E5E7EB] rounded-2xl w-full shadow-lg relative z-10 flex flex-col items-center">
-                                    <h2 className="text-xl font-bold text-[#EF4444] mb-3 uppercase tracking-widest">Clinical Escalation Engaged</h2>
-                                    <p className="text-lg text-[#4B5563] mb-8 text-center bg-[#F3F4F6] p-4 rounded-xl">
-                                        A human specialist is connecting to our line right now via the 988 Crisis Copilot module.
-                                    </p>
-                                    <button className="w-full max-w-md bg-[#111827] text-white font-bold text-xl py-5 rounded-xl shadow-lg hover:bg-[#374151] transition-all transform hover:scale-[1.02]">
-                                        Speak to Specialist Now
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {interactionPhase === 'chat' && (
-                        <>
-                            {!hidingPlace && <StoryTrees />}
-                            {!hidingPlace && <ThePebble />}
-                            {gravity === 'heavy' && <MatterGravityWords heavyMessages={heavyWords} />}
-                            
-                            {/* Make absolute container pointer-events-none so StoryTrees behind it can receive clicks */}
-                            <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-1000 ${hidingPlace ? 'opacity-15' : 'opacity-100'}`} onClick={(e) => e.stopPropagation()}>
-                                <ChatFlow apiKey={apiKey} setInteractionPhase={setInteractionPhase} />
-                            </div>
-                        </>
-                    )}
-
-                    {/* Breath-Sync Engine Soft Pulse applies to environment ambient atmosphere */}
-                    {interactionPhase === 'chat' && (
-                        <motion.div 
-                            animate={{ opacity: [0.1, 0.2, 0.1] }}
-                            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/30 via-transparent to-transparent z-0"
-                        />
-                    )}
-                </motion.div>
-            );
-        };
-
-        const App = () => (
-            <MeiProvider>
-                <LandingClearing />
-            </MeiProvider>
-        );
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+            for (let i = ghostButterflies.length - 1; i >= 0; i--) {
+                let gb = ghostButterflies[i];
+                if (!gb.update(dt)) {
+                    ghostButterflies.splice(i, 1);
+                    if (gb.isBlue && gb.onComplete) gb.onComplete();
+                } else {
+                    gb.draw(ctx);
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate);
     </script>
 </body>
 </html>
