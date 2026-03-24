@@ -40,9 +40,9 @@
     let dTimer = 0;
     let dCenter;
     
-    // Dynamically returns the current thematic palette based cleanly on the 25-click loop
+    // Dynamically returns the current thematic palette based cleanly on the 15-click loop
     function getCurrentThemeColor() {
-        let cycleNum = Math.floor(Math.max(0, absoluteTapCount - 1) / 25);
+        let cycleNum = Math.floor(Math.max(0, absoluteTapCount - 1) / 15);
         let palettes = [
             color(20, 55, 90),   // Cycle 1: Deep Navy
             color(190, 45, 55),  // Cycle 2: Rich Crimson
@@ -154,11 +154,11 @@
       tapCount++;
       absoluteTapCount++; // Never resets, continuously tracking absolute lifetime clicks
       
-      if (tapCount < 25) {
-        // The morphing evolution natively builds across 25 clicks!
+      if (tapCount < 15) {
+        // The morphing evolution natively builds uniformly across 15 clicks!
         bursts.push(new Burst(mouseX, mouseY, tapCount));
-      } else if (tapCount === 25) {
-        // State D: The final magical Coalescence Trigger structurally capped exactly on the 25th tap of the cycle
+      } else if (tapCount === 15) {
+        // State D: The final magical Coalescence Trigger structurally capped exactly on the 15th tap of the cycle
         state = 'D';
         dTimer = 0;
         initButterfly(mouseX, mouseY);
@@ -308,7 +308,7 @@
                 let tx = sin(ang) * p * scaleR;
                 let ty = -cos(ang) * p * scaleR;
                 
-                // The explicit user mapping: 1-5 vague contour, 6-10 half-formed, 11+ hyper-distinct bounds
+                // The explicit user mapping: 1-5 vague contour, 6-10 half-formed, 11-14 crystalline bounds
                 if (tapIndex <= 5) {
                     // Vague heavy pareidolia scrambling visually disguising the shape
                     tx += random(-140, 140);
@@ -318,7 +318,7 @@
                     tx += random(-40, 40);
                     ty += random(-40, 40);
                 } else {
-                    // 100% formed! Crystalline exact param-equation traces from click 11 continuously through 24
+                    // 100% formed! Crystalline exact param-equation traces from click 11 continuously through 14
                     tx += random(-5, 5);
                     ty += random(-5, 5);
                 }
