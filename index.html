@@ -440,22 +440,16 @@
             let progress = this.timer / this.lifeTime;
             
             for(let p of this.particles) {
-                 // Dynamic alpha scaling, deliberately capping high-end max alpha to 120 so the dots
-                 // mathematically CANNOT burn a long continuous white smear-trail into the background buffer!
+                 // Dynamic alpha scaling. Explicitly retaining High-Contrast permanently so the ghosts
+                 // clearly display the structural evolution from vague clouds to the dense butterfly silhouettes.
                  if (progress >= this.collapseThreshold && progress < 1.0) {
-                       p.alpha = map(progress, this.collapseThreshold, 1.0, 120, 20);
+                       p.alpha = map(progress, this.collapseThreshold, 1.0, 220, 180);
                  } else if (progress >= 1.0) {
-                       p.alpha = 20; // locked as a permanently subdued haunted ghost trace 
+                       p.alpha = 180; // Highly visible, vivid permanent ghost traces frozen in space
                  } else {
-                       p.alpha = 120; // High enough to see clearly, low enough to wipe cleanly without tracing
+                       p.alpha = 240; // Extremely punchy, dense tracing while constructing the shape
                  }
-                 
-                 // Flashing discrete render trick: actively exploring dots blink rapidly so they
-                 // literally draw as a broken sequence of disjointed dots. Impossible to look like a solid tracked line.
-                 let isExploring = (!p.isVoiceless && progress < this.collapseThreshold);
-                 if (isExploring && (frameCount % 20 < 10)) {
-                     continue; // Skip the draw call 50% of the time, fragmenting the flight path entirely!
-                 }
+
                  
                  noStroke();
                  fill(red(this.themeColor), green(this.themeColor), blue(this.themeColor), p.alpha); // Dynamically evolving colors tracking the active cycle
@@ -544,9 +538,9 @@
             let targetOffset = p5.Vector.mult(this.tOffset, breath);
             let target = p5.Vector.add(this.origin, targetOffset);
             
-            // Starts slow and speeds up beautifully as it detaches and slides off
+            // Starts slow and speeds up beautifully snapping explicitly into the tight structural bounds
             let dist = p5.Vector.dist(this.curr, target);
-            let force = constrain(map(dist, 0, 300, 0.003, 0.03), 0.003, 0.03); // Halved movement speed
+            let force = constrain(map(dist, 0, 300, 0.02, 0.12), 0.02, 0.12); // Greatly accelerated snapping constraints
             
             this.curr.x = lerp(this.curr.x, target.x, force);
             this.curr.y = lerp(this.curr.y, target.y, force);
