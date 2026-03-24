@@ -34,8 +34,7 @@
     let bursts = [];
     let droplets = [];
     let tinyButterflies = []; // Persistent tracking for disappearing voices
-    let clouds = []; // High atmospheric drifting clouds
-    let pointillismBg; // Georges Seurat off-screen textured dot buffer
+    let clouds = []; // Massive Ghibli volumetric clouds
     let tapCount = 0;
     let dTimer = 0;
     let dCenter;
@@ -45,16 +44,13 @@
     function setup() {
       createCanvas(windowWidth, windowHeight);
       
-      // Generate the massive static Pointillism texture underpainting overlay
-      buildPointillismBg();
-      
-      // Initialize Summer Sun Motes (Golden Pollen/Light)
-      for (let i = 0; i < 150; i++) { // Dropped slightly to accommodate rendering mass of new grass
+      // Initialize Golden floating magic spores (Spirited Away style)
+      for (let i = 0; i < 120; i++) { 
         stars.push(new Star());
       }
       
-      // Initialize Drifting Clouds matching the summer zenith spacing
-      for (let i = 0; i < 7; i++) {
+      // Initialize massive drifting Ghibli cumulonimbus clouds
+      for (let i = 0; i < 5; i++) {
         clouds.push(new Cloud());
       }
     }
@@ -63,16 +59,11 @@
       // High-performance vertical linear gradient for 2D atmospheric perspective (Zenith to Forest Edge)
       let ctx = drawingContext;
       let grad = ctx.createLinearGradient(0, 0, 0, height);
-      grad.addColorStop(0, '#589de6');    // Deep zenith azure
-      grad.addColorStop(0.65, '#e4f9fa'); // Hazy distant warm sunlight
-      grad.addColorStop(1, '#9fcc93');    // Light green meadow horizon blend
+      grad.addColorStop(0, '#2d7dde');    // Deep vivid majestic Ghibli blue
+      grad.addColorStop(0.65, '#ccebfa'); // Hazy warm sun horizon line
+      grad.addColorStop(1, '#81c963');    // Vibrant lush summer meadow base
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
-      
-      // Overstamp the Seurat masterpiece entirely across the sky & ground!
-      if (pointillismBg) {
-          image(pointillismBg, 0, 0); 
-      }
       
       // State A: Summer Motes background drift & Clouds
       for (let c of clouds) {
@@ -161,60 +152,43 @@
     
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
-      buildPointillismBg();
     }
     
     // --- ENVIRONMENT RENDERERS --- //
     
-    function buildPointillismBg() {
-        if (pointillismBg) pointillismBg.remove();
-        pointillismBg = createGraphics(windowWidth, windowHeight);
-        pointillismBg.noStroke();
-        
-        let density = windowWidth * windowHeight * 0.04; // Dense dotted canvas base (~80k dots)
-        for (let i = 0; i < density; i++) {
-            let x = random(windowWidth);
-            let y = random(windowHeight);
-            
-            // Optical mixing through explicit complementary dots mapped to canvas height
-            if (y < windowHeight * 0.70) { // Sky Region
-                let p = random();
-                if (p < 0.4) pointillismBg.fill(random(50, 100), random(140, 180), random(230, 255), random(120, 180)); // Zenith Azure
-                else if (p < 0.7) pointillismBg.fill(random(160, 200), random(220, 255), 255, random(120, 180)); // Cyan
-                else pointillismBg.fill(255, 250, random(210, 240), random(120, 180)); // Bright sunlight
-            } else { // Grass Field 
-                let p = random();
-                if (p < 0.4) pointillismBg.fill(random(30, 70), random(110, 150), random(40, 80), random(120, 180)); // Lush core green
-                else if (p < 0.7) pointillismBg.fill(random(140, 190), random(190, 220), random(70, 110), random(120, 180)); // Hot yellow-green
-                else pointillismBg.fill(random(110, 140), random(170, 200), random(210, 230), random(120, 180)); // Sky reflection bounce dots
-            }
-            pointillismBg.circle(x, y, random(2.0, 5.0)); // Raw bristle stamping
-        }
-    }
-    
     function drawGrass() {
-        drawingContext.setLineDash([3, 7]); // George Seurat optical mixture dot staggering
-        strokeWeight(3.5); // Plump circular spots natively staggering along 2D paths
         noFill();
+        let windTime = frameCount * 0.02; // Global sweeping breeze
         
-        let windTime = frameCount * 0.015; // Global invisible wind drag
-        
-        for (let x = 0; x <= width; x += 7) { 
-            let windBend = map(noise(x * 0.03, windTime), 0, 1, -45, 45); 
-            let heightVar = map(noise(x * 0.1), 0, 1, height * 0.05, height * 0.25);
-            
-            // Keep blade colors spatially static using 1D noise matching post-impressionism
-            let cShift = noise(x * 0.05 + 500);
-            if (cShift < 0.3) stroke(40, 110, 60, 230); // shadow green pointillism
-            else if (cShift < 0.7) stroke(90, 180, 90, 230); // bright leaf spots
-            else stroke(220, 230, 110, 230); // bright yellow-green sun highlights
+        // Massive loop constructing native 2D bent vectors tracking the wind
+        // Draw BACK layer (darker, shorter, dense shadow meadow)
+        stroke(45, 145, 65, 230); // Deep rich forest green
+        strokeWeight(2.5);
+        for (let x = 0; x <= width; x += 5) { 
+            // Ghibli organized wind wave physically rolling across the field (sin + noise)
+            let wave = sin(x * 0.006 + windTime) * 25; 
+            let windBend = wave + map(noise(x * 0.02, windTime), 0, 1, -25, 25); 
+            let heightVar = map(noise(x * 0.1), 0, 1, height * 0.05, height * 0.20);
             
             beginShape();
             vertex(x, height);
             quadraticVertex(x, height - heightVar * 0.6, x + windBend, height - heightVar); 
             endShape();
         }
-        drawingContext.setLineDash([]); // Strictly reset the dash renderer back to solid lines!
+        
+        // Draw FRONT layer (brighter, taller, overlapping beautifully catching the sun)
+        stroke(100, 210, 80, 240); // Bright pure sunlit leaf green
+        strokeWeight(3.0);
+        for (let x = 0; x <= width; x += 8) { 
+            let wave = sin((x+100) * 0.006 + windTime) * 35; // offset wave naturally
+            let windBend = wave + map(noise((x+100) * 0.02, windTime), 0, 1, -35, 35); 
+            let heightVar = map(noise((x+100) * 0.1), 0, 1, height * 0.08, height * 0.32);
+            
+            beginShape();
+            vertex(x, height);
+            quadraticVertex(x, height - heightVar * 0.6, x + windBend, height - heightVar); 
+            endShape();
+        }
     }
     
     // --- PHYSICS & VISUAL CLASSES --- //
@@ -223,38 +197,43 @@
       constructor() {
         this.pos = createVector(random(width), random(height));
         this.nx = random(1000);
-        this.size = random(1.0, 3.5); // Plumper floating summer pollen/motes
+        this.size = random(3.0, 7.0); // Bigger, softer floating magic spores/motes
       }
       update() {
-        // Subtle glow flickering, stationary shimmering summer heat refraction
-        this.nx += 0.003;
+        // Drifting golden motes slowly rising in the updrafts
+        this.nx += 0.005;
+        this.pos.x += map(noise(this.nx, frameCount * 0.01), 0, 1, -0.6, 0.6);
+        this.pos.y -= random(0.3, 1.0); // Slowly rising
+        if (this.pos.y < 0) this.pos.y = height + 10;
       }
       display() {
         noStroke();
-        let alpha = map(noise(this.nx), 0, 1, 10, 150);
-        fill(255, 230, 100, alpha); // Golden sunlight pollen motes
+        let alpha = map(noise(this.nx), 0, 1, 20, 200);
+        // Soft glowing layers imitating cinematic optical lens glow
+        fill(255, 240, 150, alpha * 0.25); // Outer haze
+        circle(this.pos.x, this.pos.y, this.size * 2.8);
+        fill(255, 250, 200, alpha * 0.9); // Hot solid center
         circle(this.pos.x, this.pos.y, this.size);
       }
     }
     
     class Cloud {
         constructor() {
-            this.pos = createVector(random(width), random(height * 0.05, height * 0.45));
-            this.size = random(100, 350); // Massive fluffy structures
-            this.speed = random(0.1, 0.45); // Heavy, slow drifting
-            this.opacity = random(150, 255);
+            this.pos = createVector(random(width), random(height * 0.05, height * 0.35));
+            this.size = random(200, 500); // Massive epic Ghibli columns
+            this.speed = random(0.1, 0.35); // Slow majestic drift
+            this.opacity = random(220, 255); // Solid painted volumes
             
-            // Rebuild cloud explicitly as an aggregate of complementary-colored dots rather than solid blobs
-            this.dots = [];
-            let numDots = Math.floor(random(300, 700));
-            for (let i = 0; i < numDots; i++) {
-                let rLocal = random(0, this.size * 0.4);
+            // Rebuild cloud as a structural painted blob composed of crisp overlapping discs
+            this.clumps = [];
+            let numClumps = Math.floor(random(8, 16));
+            for (let i = 0; i < numClumps; i++) {
+                let rLocal = random(this.size * 0.25, this.size * 0.55);
                 let ang = random(TWO_PI);
-                this.dots.push({
-                   x: cos(ang) * rLocal * random(1.5, 2.5), // stretch horizontal 
-                   y: sin(ang) * rLocal,
-                   r: random(3, 7), // Thick Seurat dots 
-                   cType: random()
+                this.clumps.push({
+                   x: cos(ang) * random(0, this.size * 0.45) * 1.5, // Wider horizontally 
+                   y: sin(ang) * random(0, this.size * 0.25) - (rLocal * 0.2), // Biased upward
+                   r: rLocal
                 });
             }
         }
@@ -263,7 +242,7 @@
             if (this.pos.x - this.size > width) {
                 // Respawn cleanly upwind upon exiting right screen bounds
                 this.pos.x = -this.size;
-                this.pos.y = random(height * 0.05, height * 0.45);
+                this.pos.y = random(height * 0.05, height * 0.35);
             }
         }
         display() {
@@ -271,13 +250,17 @@
             push();
             translate(this.pos.x, this.pos.y);
             
-            // Optical mixture via heavily textured complementary colored dots 
-            for (let d of this.dots) {
-                if (d.cType < 0.5) fill(255, 255, 255, this.opacity);      // White highlights
-                else if (d.cType < 0.8) fill(255, 245, 210, this.opacity); // Warm sunlight
-                else fill(210, 200, 230, this.opacity);                    // Soft lavender shadow pockets
-                
-                circle(d.x, d.y, d.r);
+            // Ghibli Layered Painting Technique: 
+            // 1. Draw the entire structure first in soft lavender/grey shadow
+            fill(190, 205, 230, this.opacity); 
+            for (let c of this.clumps) {
+                circle(c.x, c.y + c.r * 0.15, c.r); // Render shadow volume slightly lower
+            }
+            
+            // 2. Draw the crisp, luminous white fluffy peaks completely overtop
+            fill(255, 255, 255, this.opacity); 
+            for (let c of this.clumps) {
+                circle(c.x, c.y - c.r * 0.05, c.r * 0.92); // Crisp peaks catching sunlight
             }
             pop();
         }
