@@ -71,18 +71,18 @@
       // State D: The Water Butterfly (Coalescence & Evaporation)
       if (state === 'D') {
         dTimer++;
-        if (dTimer < 350) {
+        if (dTimer < 600) {
           // Drops "sweat" from past traces coalescing into a shape
           for (let d of droplets) {
             d.update();
             d.display();
           }
-        } else if (dTimer === 350) {
+        } else if (dTimer === 600) {
           // Evaporation trigger
           for (let d of droplets) {
             d.triggerEvaporate();
           }
-        } else if (dTimer > 350) {
+        } else if (dTimer > 600) {
           // Visualizing vapor evaporation
           for (let i = droplets.length - 1; i >= 0; i--) {
             let d = droplets[i];
@@ -155,15 +155,19 @@
             
             let numLines = Math.floor(random(40, 80)); // rich particle burst
             
-            // Intention: Form an organic pareidolia shape (rorschach abstract blob meaning)
+            // Symmetrical pareidolia logic: ensures left maps exactly to right simulating an inkblot test
             let shapeSeed = random(1000);
             let shapeVariance = random(0.5, 2.5); // dictates how extremely the blob stretches
             
             for(let i = 0; i < numLines; i++) {
-                let angle = random(TWO_PI);
-                let nVal = noise(cos(angle) + shapeSeed, sin(angle) + shapeSeed);
-                // Pareidolia radius mapping ensuring non-geometric fluidity
-                let r = this.shapeRadius * map(nVal, 0, 1, 0.2, shapeVariance);
+                let p = i / numLines;
+                let angle = p * TWO_PI;
+                // Bilateral symmetry matching: left side mirrors right exactly
+                let symAngle = angle > PI ? TWO_PI - angle : angle;
+                
+                let nVal = noise(cos(symAngle) + shapeSeed, sin(symAngle) + shapeSeed);
+                // Pareidolia radius mapping ensuring symmetric fluidity
+                let r = this.shapeRadius * map(nVal, 0, 1, 0.3, shapeVariance);
                 let tOffset = p5.Vector.fromAngle(angle).mult(r);
                 
                 this.particles.push({
@@ -178,19 +182,19 @@
             }
         }
         update() {
-            this.timer += 0.5; // 50% slower burst speed per request
+            this.timer += 0.2; // Excruciatingly slow expansion so viewer can see meaning forming
             let progress = this.timer / this.lifeTime;
             
             for(let p of this.particles) {
                 if (progress < this.collapseThreshold) {
                     // Stutter physics: trying desperately to form the intended shape
                     let target = p5.Vector.add(this.origin, p.tOffset);
-                    let lerpAmt = 0.04;
+                    let lerpAmt = 0.02; // extremely gradual pulling to let eyes study the blob
                     p.curr.x = lerp(p.curr.x, target.x, lerpAmt);
                     p.curr.y = lerp(p.curr.y, target.y, lerpAmt);
                     
                     // Tremor noise reflecting the 'struggle'
-                    let intensity = map(progress, 0, this.collapseThreshold, 0.5, 4);
+                    let intensity = map(progress, 0, this.collapseThreshold, 0.1, 1.5); // Tremor calmed severely
                     let tx = map(noise(p.seed, frameCount * 0.1), 0, 1, -1, 1) * intensity;
                     let ty = map(noise(p.seed + 50, frameCount * 0.1), 0, 1, -1, 1) * intensity;
                     
@@ -259,7 +263,7 @@
             this.size = random(1, 2);
             
             // "Sweating" delay: it must visually grow ON the ghost trace before sliding off
-            this.sweatTimer = random(20, 150);
+            this.sweatTimer = random(50, 200); // Delayed significantly longer to watch Sweat build heavily
             
             // Generate coordinates along a mathematical Parametric Butterfly Curve
             let t = random(0, 12 * PI);
@@ -268,7 +272,8 @@
             let x = sin(t) * (e - 2*cos(4*t) - s);
             let y = -cos(t) * (e - 2*cos(4*t) - s); // flip upright intentionally negative
             
-            let scaleFact = random(12, 18);
+            // Uniform scale perfectly carves a recognizable crisp butterfly silhouette outlining
+            let scaleFact = 20; 
             this.tOffset = createVector(x * scaleFact, y * scaleFact);
             this.vp = createVector(0,0);
         }
@@ -280,8 +285,8 @@
                 return; // Anchor to the trace until sweat completes
             }
             
-            // Fluidly move towards butterfly shape parametric targets
-            let breath = map(sin(frameCount * 0.03 + this.seed), -1, 1, 0.9, 1.1);
+            // Synchronous breathing so the entire butterfly pulses firmly as one recognizable structural entity
+            let breath = map(sin(frameCount * 0.03), -1, 1, 0.95, 1.05); // removed this.seed
             let targetOffset = p5.Vector.mult(this.tOffset, breath);
             let target = p5.Vector.add(this.origin, targetOffset);
             
