@@ -33,6 +33,7 @@
     let stars = [];
     let bursts = [];
     let droplets = [];
+    let tinyButterflies = []; // Persistent tracking for disappearing voices
     let tapCount = 0;
     let dTimer = 0;
     let dCenter;
@@ -66,6 +67,17 @@
         let b = bursts[i];
         b.update();
         b.display();
+      }
+      
+      // The Small Voices (Tiny blue butterflies fleeing over the edges)
+      for (let i = tinyButterflies.length - 1; i >= 0; i--) {
+        let tb = tinyButterflies[i];
+        tb.update();
+        tb.display();
+        // Immediately kills flight trails when cinematic State D begins or when entirely off-screen
+        if (tb.isDead() || state === 'D') {
+            tinyButterflies.splice(i, 1);
+        }
       }
       
       // State D: The Water Butterfly (Coalescence & Evaporation)
@@ -183,12 +195,13 @@
                     vx: 0,
                     vy: 0,
                     alpha: 255,
-                    lerpSpeed: random(0.005, 0.045) // Completely disorganize the expansion wave so it struggles randomly
+                    lerpSpeed: random(0.002, 0.02) // Halved AGAIN! Extra agonizingly slow movement
                 });
             }
+            this.spawnedButterflies = false; // logic lock for end-state triggers
         }
         update() {
-            this.timer += 0.2; // Excruciatingly slow expansion so viewer can see meaning forming
+            this.timer += 0.1; // Slowed another 100%. Agonizingly slow meaning formation
             let progress = this.timer / this.lifeTime;
             
             for(let p of this.particles) {
@@ -222,6 +235,16 @@
                     // Ghostly faintt: freezing visually permanently instead of wiping
                     p.vx = 0;
                     p.vy = 0;
+                }
+            }
+            
+            // Burst ends logic: representing attempts to say something fleeing outward
+            if (progress >= 1.0 && !this.spawnedButterflies) {
+                this.spawnedButterflies = true;
+                let numVoices = Math.floor(random(1, 4)); // Small disappearing voices
+                for(let i=0; i<numVoices; i++) {
+                    let ghostOrigin = random(this.particles);
+                    tinyButterflies.push(new TinyButterfly(ghostOrigin.curr.x, ghostOrigin.curr.y));
                 }
             }
         }
@@ -355,6 +378,46 @@
             
             this.alpha -= 0.6; // beautiful slow fade to nothing
             this.size = lerp(this.size, 8, 0.01); // gracefully expand into thin mist
+        }
+    }
+
+    class TinyButterfly {
+        constructor(x, y) {
+            this.pos = createVector(x, y);
+            this.seed = random(1000);
+            
+            // Flutter outwards aimlessly toward the edges leaving their origin behind
+            let angle = random(TWO_PI);
+            this.vel = p5.Vector.fromAngle(angle).mult(random(0.3, 0.8));
+            this.color = color(90, 210, 255); // vibrant tiny blue bugs 
+            this.size = random(2.5, 4.5);
+        }
+        update() {
+            // Nervous flutter jitter simulation 
+            let flutterX = map(noise(this.seed, frameCount * 0.05), 0, 1, -1, 1) * 1.5;
+            let flutterY = map(noise(this.seed + 100, frameCount * 0.05), 0, 1, -1, 1) * 1.5;
+            this.pos.x += this.vel.x + flutterX;
+            this.pos.y += this.vel.y + flutterY;
+            
+            // Accelerating organically over the edge into the void
+            this.vel.mult(1.003);
+        }
+        display() {
+            // Fast opaque object crossing a translucent canvas functionally burns
+            // an automatic flight trace trail directly into the page fading exquisitely slowly.
+            noStroke();
+            fill(this.color);
+            push();
+            translate(this.pos.x, this.pos.y);
+            rotate(this.vel.heading());
+            // Wing flap optical illusion creates natural broken-line trail spacing
+            let wing = map(sin(frameCount * 0.3 + this.seed), -1, 1, 0.2, 1);
+            ellipse(0, 0, this.size, this.size * wing);
+            pop();
+        }
+        isDead() {
+            // Only killed explicitly when fully escaped beyond screen margins
+            return (this.pos.x < -100 || this.pos.x > width + 100 || this.pos.y < -100 || this.pos.y > height + 100);
         }
     }
   </script>
