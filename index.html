@@ -70,19 +70,21 @@
       
       // State D: The Water Butterfly (Coalescence & Evaporation)
       if (state === 'D') {
-        dTimer++;
+        dTimer += 0.5; // Slow down everything by 50% more!
         if (dTimer < 600) {
           // Drops "sweat" from past traces coalescing into a shape
           for (let d of droplets) {
             d.update();
             d.display();
           }
-        } else if (dTimer === 600) {
+        } else if (dTimer === 600 || dTimer === 600.5) {
           // Evaporation trigger
-          for (let d of droplets) {
-            d.triggerEvaporate();
+          if (dTimer === 600) {
+            for (let d of droplets) {
+              d.triggerEvaporate();
+            }
           }
-        } else if (dTimer > 600) {
+        } else if (dTimer > 600.5) {
           // Visualizing vapor evaporation
           for (let i = droplets.length - 1; i >= 0; i--) {
             let d = droplets[i];
@@ -108,11 +110,11 @@
       
       tapCount++;
       
-      if (tapCount < 5) {
-        // State B: The Stutter points
+      if (tapCount < 15) {
+        // State B: The Stutter points (requires 3 sets of 5 clicks)
         bursts.push(new Burst(mouseX, mouseY, tapCount));
-      } else if (tapCount === 5) {
-        // State D: Coalescence Trigger
+      } else if (tapCount === 15) {
+        // State D: Coalescence Trigger on the 15th tap
         state = 'D';
         dTimer = 0;
         initButterfly(mouseX, mouseY);
@@ -267,13 +269,15 @@
             i++;
         }
         
-        // If the ghosts aren't dense enough to draw the solid butterfly, spawn extra droplets sweating from the center
-        // to fill the mathematical gaps so the viewer undeniably recognizes the majestic shape!
+        // If the ghosts aren't dense enough to draw the solid butterfly, spawn extra droplets scattered wildly
+        // across the screen instead of a geometric box, fading them in organically to be vacuumed into the shape
         while (i < targetCount) {
             let tVal = (i / total) * 12 * PI;
-            let auxX = cx + random(-30, 30);
-            let auxY = cy + random(-30, 30);
-            droplets.push(new Droplet(auxX, auxY, cx, cy, tVal));
+            let auxX = random(0, width);
+            let auxY = random(0, height);
+            let d = new Droplet(auxX, auxY, cx, cy, tVal);
+            d.alpha = 0; // Starts invisible
+            droplets.push(d);
             i++;
         }
         
@@ -285,7 +289,8 @@
             this.origin = createVector(cx, cy);
             this.curr = createVector(sx, sy); // starts EXACTLY where the ghost trace froze
             this.seed = random(1000);
-            this.alpha = random(80, 220);
+            this.targetAlpha = random(80, 220);
+            this.alpha = this.targetAlpha; // default solid, overwritable
             this.size = random(2.0, 3.5); // rigid robust dots for pure visual clarity
             
             // "Sweating" delay: it must visually grow ON the ghost trace before sliding off
@@ -304,10 +309,13 @@
             this.vp = createVector(0,0);
         }
         update() {
+            if (this.alpha < this.targetAlpha) {
+                this.alpha += 1.5; // graceful fade in for invisibly spawned extra drops
+            }
             if (this.sweatTimer > 0) {
                 // Visually "sweating" / expanding from the ghost trace without moving yet
                 this.sweatTimer--;
-                this.size = map(this.sweatTimer, 150, 0, 1.5, 4.5);
+                this.size = map(this.sweatTimer, 200, 0, 0.5, 4.5, true);
                 return; // Anchor to the trace until sweat completes
             }
             
@@ -318,7 +326,7 @@
             
             // Starts slow and speeds up beautifully as it detaches and slides off
             let dist = p5.Vector.dist(this.curr, target);
-            let force = constrain(map(dist, 0, 300, 0.01, 0.08), 0.01, 0.08);
+            let force = constrain(map(dist, 0, 300, 0.003, 0.03), 0.003, 0.03); // Halved movement speed
             
             this.curr.x = lerp(this.curr.x, target.x, force);
             this.curr.y = lerp(this.curr.y, target.y, force);
@@ -333,20 +341,20 @@
             circle(this.curr.x, this.curr.y, this.size);
         }
         triggerEvaporate() {
-            // Initiate phase transition from fluid to vapor
+            // Initiate gentle phase transition from fluid to vapor
             let angle = random(TWO_PI);
-            let force = random(1, 5);
+            let force = random(0.2, 1.0); // much weaker scatter
             this.vp = p5.Vector.fromAngle(angle).mult(force);
-            this.vp.y -= random(2, 6); // strongly pulls up like evaporating vapor
+            this.vp.y -= random(0.5, 1.5); // weak upward pull
         }
         updateEvaporate() {
             this.curr.add(this.vp);
-            this.vp.y -= 0.1; // accelerates upward rapidly
-            this.curr.x += random(-1, 1);
-            this.curr.y += random(-1, 1);
+            this.vp.y -= 0.015; // slow drift upward instead of rushing
+            this.curr.x += random(-0.2, 0.2); // softer drift
+            this.curr.y += random(-0.2, 0.2);
             
-            this.alpha -= 1.5;
-            this.size = lerp(this.size, 15, 0.04); // gracefully expand into smoke
+            this.alpha -= 0.6; // beautiful slow fade to nothing
+            this.size = lerp(this.size, 8, 0.01); // gracefully expand into thin mist
         }
     }
   </script>
