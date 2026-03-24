@@ -34,32 +34,50 @@
     let bursts = [];
     let droplets = [];
     let tinyButterflies = []; // Persistent tracking for disappearing voices
+    let clouds = []; // High atmospheric drifting clouds
     let tapCount = 0;
     let dTimer = 0;
     let dCenter;
     
-    const BGC = [246, 248, 238]; // Soft bright summer sunlit background
+    // Obsolete flat color array replaced natively by the atmospheric drawing gradient 
     
     function setup() {
       createCanvas(windowWidth, windowHeight);
-      background(BGC[0], BGC[1], BGC[2]);
       
       // Initialize Summer Sun Motes (Golden Pollen/Light)
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < 150; i++) { // Dropped slightly to accommodate rendering mass of new grass
         stars.push(new Star());
+      }
+      
+      // Initialize Drifting Clouds matching the summer zenith spacing
+      for (let i = 0; i < 7; i++) {
+        clouds.push(new Cloud());
       }
     }
     
     function draw() {
-      // Obliterated the 13-alpha partial clearing. The canvas clears aggressively fully every frame, physically 
-      // rendering it impossible for ANY entity to draw a smeared biological tail / tadpole trace into the background.
-      background(BGC[0], BGC[1], BGC[2]);
+      // High-performance vertical linear gradient for 2D atmospheric perspective (Zenith to Forest Edge)
+      let ctx = drawingContext;
+      let grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, '#589de6');    // Deep zenith azure
+      grad.addColorStop(0.65, '#e4f9fa'); // Hazy distant warm sunlight
+      grad.addColorStop(1, '#9fcc93');    // Light green meadow horizon blend
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
       
-      // State A: Starry background drift
+      // State A: Summer Motes background drift & Clouds
+      for (let c of clouds) {
+        c.update();
+        c.display();
+      }
+      
       for (let s of stars) {
         s.update();
         s.display();
       }
+      
+      // State Grass: Native sweeping grassfield reacting to invisible wind frames
+      drawGrass();
       
       // State B: The Stutter (Bursts of points)
       for (let i = bursts.length - 1; i >= 0; i--) {
@@ -134,7 +152,29 @@
     
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
-      background(BGC[0], BGC[1], BGC[2]);
+    }
+    
+    // --- ENVIRONMENT RENDERERS --- //
+    
+    function drawGrass() {
+        stroke(60, 150, 70, 200); // Deep rich summer grass green natively affected by sun opacity
+        strokeWeight(1.5);
+        noFill();
+        
+        let windTime = frameCount * 0.015; // Global invisible wind drag
+        
+        // Massive loop constructing native 2D bent vectors tracking the wind
+        for (let x = 0; x <= width; x += 5) {
+            let windBend = map(noise(x * 0.03, windTime), 0, 1, -45, 45); // Blown laterally natively
+            let heightVar = map(noise(x * 0.1), 0, 1, height * 0.05, height * 0.25);
+            let baseY = height;
+            let peakY = height - heightVar;
+            
+            beginShape();
+            vertex(x, baseY);
+            quadraticVertex(x, height - heightVar * 0.6, x + windBend, peakY); // Bends organically toward wind
+            endShape();
+        }
     }
     
     // --- PHYSICS & VISUAL CLASSES --- //
@@ -155,6 +195,43 @@
         fill(255, 230, 100, alpha); // Golden sunlight pollen motes
         circle(this.pos.x, this.pos.y, this.size);
       }
+    }
+    
+    class Cloud {
+        constructor() {
+            this.pos = createVector(random(width), random(height * 0.05, height * 0.45));
+            this.size = random(100, 350); // Massive fluffy structures
+            this.speed = random(0.1, 0.45); // Heavy, slow drifting
+            this.opacity = random(60, 140);
+            
+            this.clumps = [];
+            let numClumps = random(5, 12);
+            for (let i = 0; i < numClumps; i++) {
+                this.clumps.push({
+                    x: random(-this.size * 0.4, this.size * 0.4),
+                    y: random(-this.size * 0.2, this.size * 0.2),
+                    r: random(this.size * 0.3, this.size * 0.7)
+                });
+            }
+        }
+        update() {
+            this.pos.x += this.speed; // Drift cleanly downwind (rightwards)
+            if (this.pos.x - this.size > width) {
+                // Respawn cleanly upwind upon exiting right screen bounds
+                this.pos.x = -this.size;
+                this.pos.y = random(height * 0.05, height * 0.45);
+            }
+        }
+        display() {
+            noStroke();
+            fill(255, 255, 255, this.opacity);
+            push();
+            translate(this.pos.x, this.pos.y);
+            for (let c of this.clumps) {
+                circle(c.x, c.y, c.r);
+            }
+            pop();
+        }
     }
     
     class Burst {
@@ -403,9 +480,9 @@
             this.pos = createVector(x, y);
             this.seed = random(1000);
             
-            // Define an underlying absolute escape vector (the edge they eventually disappear over)
-            let angle = random(TWO_PI);
-            this.escapeDir = p5.Vector.fromAngle(angle); 
+            // Summer wind predominantly blows rightward with the clouds, so their general escape follows it!
+            let targetAngle = random(-PI/2.5, PI/2.5); // Natively drifts rightward over time, occasionally upwards
+            this.escapeDir = p5.Vector.fromAngle(targetAngle); 
             
             this.color = color(10, 80, 210); // Vibrant deep morpho blue bugs against bright daylight
             this.size = random(3.0, 5.0);
