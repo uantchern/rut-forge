@@ -155,19 +155,22 @@
             
             let numLines = Math.floor(random(40, 80)); // rich particle burst
             
-            // Symmetrical pareidolia logic: ensures left maps exactly to right simulating an inkblot test
+            // Intention: Utterly asymmetrical pareidolia shapes (clouds/nebulas) strictly breaking any "firework" symmetry
             let shapeSeed = random(1000);
-            let shapeVariance = random(0.5, 2.5); // dictates how extremely the blob stretches
             
             for(let i = 0; i < numLines; i++) {
-                let p = i / numLines;
-                let angle = p * TWO_PI;
-                // Bilateral symmetry matching: left side mirrors right exactly
-                let symAngle = angle > PI ? TWO_PI - angle : angle;
+                // Distribute randomly across to break generic uniform spacing
+                let angle = random(TWO_PI);
+                // Fundamentally fill the inner volume area, eliminating the hollow "firework ring" effect
+                let baseR = random(15, this.shapeRadius); 
                 
-                let nVal = noise(cos(symAngle) + shapeSeed, sin(symAngle) + shapeSeed);
-                // Pareidolia radius mapping ensuring symmetric fluidity
-                let r = this.shapeRadius * map(nVal, 0, 1, 0.3, shapeVariance);
+                // Pure asymmetric noise distortion clustering the dots into deep organic clouds
+                let px = baseR * cos(angle);
+                let py = baseR * sin(angle);
+                let nVal = noise(px * 0.015 + shapeSeed, py * 0.015 + shapeSeed);
+                
+                // Aggressive stretching of the cloud contour
+                let r = baseR * map(nVal, 0, 1, 0.1, 2.5);
                 let tOffset = p5.Vector.fromAngle(angle).mult(r);
                 
                 this.particles.push({
@@ -177,7 +180,8 @@
                     dissolved: false,
                     vx: 0,
                     vy: 0,
-                    alpha: 255
+                    alpha: 255,
+                    lerpSpeed: random(0.005, 0.045) // Completely disorganize the expansion wave so it struggles randomly
                 });
             }
         }
@@ -189,9 +193,9 @@
                 if (progress < this.collapseThreshold) {
                     // Stutter physics: trying desperately to form the intended shape
                     let target = p5.Vector.add(this.origin, p.tOffset);
-                    let lerpAmt = 0.02; // extremely gradual pulling to let eyes study the blob
-                    p.curr.x = lerp(p.curr.x, target.x, lerpAmt);
-                    p.curr.y = lerp(p.curr.y, target.y, lerpAmt);
+                    // Uses personalized lerp speeds so the blob scrambles into place instead of expanding together
+                    p.curr.x = lerp(p.curr.x, target.x, p.lerpSpeed);
+                    p.curr.y = lerp(p.curr.y, target.y, p.lerpSpeed);
                     
                     // Tremor noise reflecting the 'struggle'
                     let intensity = map(progress, 0, this.collapseThreshold, 0.1, 1.5); // Tremor calmed severely
