@@ -1,719 +1,358 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Fail on Purpose - Pilgrimage</title>
-<style>
-    html, body {
-        margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; 
-        background-color: #000000; touch-action: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        font-family: "Georgia", serif; user-select: none; -webkit-user-select: none;
+  <meta charset="UTF-8">
+  <title>i dont know what to say</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a0a;
+      overflow: hidden;
+      font-family: 'Georgia', serif;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: crosshair;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
     }
     
-    #gradient-bg {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
-        background: radial-gradient(circle at center, #0a1014 0%, #010203 100%);
-        transition: opacity 4s ease; 
+    #discovery-word {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(220, 240, 255, 0); /* Biolo-luminescent white */
+      font-size: 28px;
+      letter-spacing: 0.3em;
+      pointer-events: none;
+      transition: color 5s ease-in-out;
+      text-shadow: 0 0 24px rgba(180, 230, 255, 0.5);
+      font-style: italic;
     }
     
-    #atmosphere { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-    
-    .grain {
-        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; opacity: 0.12;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        transition: opacity 4s ease;
+    .revealed {
+      color: rgba(220, 240, 255, 0.8) !important;
     }
-
-    #ui-layer {
-        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
-        pointer-events: none; z-index: 30; display: flex; align-items: center; justify-content: center; flex-direction: column;
-    }
-    
-    .cinematic-text {
-        position: absolute; opacity: 0; color: #fff; font-style: italic; 
-        text-shadow: 0 0 25px rgba(255,255,255,0.8); transition: opacity 3s ease;
-        top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%;
-        animation: shimmer 4s infinite alternate ease-in-out; pointer-events: none;
-    }
-    #idkwts-text { font-size: 2.2rem; letter-spacing: 3px; }
-    
-    @keyframes shimmer {
-        0% { filter: brightness(0.8); text-shadow: 0 0 10px rgba(255,255,255,0.3); }
-        100% { filter: brightness(1.3); text-shadow: 0 0 35px rgba(255,255,255,1); }
-    }
-
-    #storm-container {
-        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
-        z-index: 40; pointer-events: none; opacity: 1; transition: opacity 1s ease;
-    }
-    .storm-word {
-        position: absolute; transform: translate(-50%, -50%);
-        cursor: pointer; pointer-events: auto; padding: 25px;
-    }
-    .storm-word-inner {
-        color: #e0e5ea; font-size: 1.15rem; letter-spacing: 2.5px;
-        text-transform: uppercase; font-style: italic;
-        animation: starBlink 2.5s infinite alternate ease-in-out; transition: all 0.5s ease;
-    }
-    @keyframes starBlink {
-        0% { opacity: 0.15; transform: scale(0.95); text-shadow: 0 0 5px rgba(255,255,255,0.1); }
-        100% { opacity: 0.95; transform: scale(1.05); text-shadow: 0 0 20px rgba(255,255,255,0.9); }
-    }
-
-    #chosen-words-header {
-        position: absolute; top: 12%; left: 0; width: 100%; text-align: center;
-        color: rgba(136, 207, 255, 0.6); font-size: 0.95rem; letter-spacing: 5px; text-transform: uppercase;
-        z-index: 45; pointer-events: none; opacity: 0; transition: opacity 2s ease;
-        text-shadow: 0 0 15px rgba(136, 207, 255, 0.4); font-style: italic; line-height: 2.2;
-    }
-    
-    #story-container {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 800px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        opacity: 0; z-index: 25; 
-        transition: opacity 3s ease; pointer-events: none;
-    }
-    #final-sentence {
-        color: #e0dcd3; font-size: 1.35rem; letter-spacing: 1.5px; text-align: justify; text-align-last: center; line-height: 2.0;
-        text-shadow: 0 0 25px rgba(255,255,255,0.3); margin-bottom: 50px; font-style: italic;
-    }
-    
-    .highlight { color: #88cfff; font-weight: bold; text-shadow: 0 0 15px rgba(136, 207, 255, 0.9); text-transform: uppercase; }
-
-    .wa-btn {
-        background: transparent; border: 1px solid rgba(136, 207, 255, 0.6);
-        color: #88cfff; font-family: "Georgia", serif; font-size: 1.0rem;
-        padding: 12px 35px; border-radius: 4px; cursor: pointer; pointer-events: auto;
-        letter-spacing: 3px; transition: all 0.4s ease; text-transform: uppercase; text-decoration: none;
-        box-shadow: 0px 0px 20px rgba(136, 207, 255, 0.2);
-    }
-    .wa-btn:active { background: rgba(136, 207, 255, 0.2); }
-
-</style>
+  </style>
 </head>
 <body>
-    <div id="gradient-bg"></div>
-    <canvas id="atmosphere"></canvas>
-    <div class="grain" id="grain-layer"></div>
+  <div id="discovery-word">listen.</div>
+  
+  <script>
+    // System State Architecture
+    let state = 'A'; // A: Void, B: Stutter, D: Water Butterfly, E: Discovery
+    // Note: State C (Ghostly Faint) is natively expressed via translucent canvas refreshing.
     
-    <div id="ui-layer">
-        <div id="idkwts-text" class="cinematic-text">I don't know what to say.</div>
-    </div>
-
-    <div id="chosen-words-header"></div>
-    <div id="storm-container"></div>
+    let planktons = [];
+    let bursts = [];
+    let droplets = [];
+    let tapCount = 0;
+    let dTimer = 0;
+    let dCenter;
+    let dLines = [];
     
-    <div id="story-container">
-        <div id="final-sentence"></div>
-        <a id="whatsapp-btn" href="#" target="_blank" class="wa-btn">Share The Pilgrimage</a>
-    </div>
-
-    <script>
-        const svgPathStr = "M32,26 C22,12 5,14 2,32 C-1,47 15,50 28,38 C22,52 12,60 15,70 C18,77 28,70 32,57 C36,70 46,77 49,70 C52,60 42,52 36,38 C49,50 65,47 62,32 C59,14 42,12 32,26 Z";
-        const svgPath2D = new Path2D(svgPathStr);
-
-        const WORD_POOL = [
-            "SNOW", "MOUNTAIN", "CALM", "LAKE", "QUIET", "FOREST", "BLUE", "SKY", "VAST", "OCEAN",
-            "WIND", "BLOWING", "BREEZE", "ECHO", "STILLNESS", "HORIZON", "INFINITY", "DRIFT", "PEACE",
-            "SPACE", "CLOUD", "STORM", "MIST", "GLOW", "DUSK", "DAWN", "SILENCE", "BREATH", "TIDE",
-            "WAVE", "RIVER", "VALLEY", "CANYON", "FIELD", "MEADOW", "WILD", "CHILL", "FREEZE", "FLOAT",
-            "GLIDE", "SOAR", "DEPTH", "ABYSS", "AURA", "LUMINESCENT", "SPARK", "SHADOW", "LIGHT", "VOID",
-            "EXPANSE", "WHISPER", "PINE", "STAR", "GALAXY", "COSMOS", "NIGHT", "MIDNIGHT", "SOLITUDE",
-            "JOURNEY", "PATH", "COMPASS", "NORTH", "SOUTH", "EAST", "WEST", "MAP", "TRAIL", "TRACK", 
-            "WANDER", "ROAM", "SEEK", "FIND", "DISCOVER", "PIONEER", "NAVIGATE", "EXPLORE", "FRONTIER",
-            "BORDER", "EDGE", "BEYOND", "CROSSING", "VOYAGE", "TREK", "QUEST", "EXPEDITION", "MARCH",
-            "ODYSSEY", "SAIL", "CRUISE", "AFLOAT", "MOOR", "ANCHOR", "BEACON", "SIGNAL", "LIGHTHOUSE",
-            "RAY", "GLIMMER", "BEAM", "SHIMMER", "SPARKLE", "TWINKLE", "GLARE", "BLAZE", "DREAM", "VISION",
-            "MIRAGE", "ILLUSION", "REFLECTION", "MIRROR", "POND", "STREAM", "BROOK", "CREEK", "WATERFALL",
-            "CASCADE", "RAPIDS", "GORGE", "CHASM", "RIFT", "CREVASSE", "CAVE", "GROTTO", "GLACIER", "ICE",
-            "FROST", "WINTER", "AUTUMN", "SPRING", "SUMMER", "BREEZY", "GUST", "GALE", "CYCLONE", "TYPHOON",
-            "HURRICANE", "WHIRLWIND", "TORNADO", "DRIZZLE", "RAIN", "POUR", "MONSOON", "DELUGE", "FLOOD",
-            "SUN", "MOON", "ECLIPSE", "LUNAR", "SOLAR", "ORBIT", "PLANET", "METEOR", "COMET", "ASTEROID",
-            "DUST", "SAND", "DUNE", "DESERT", "OASIS", "BARREN", "EMPTY", "NULL", "BLANK", "CLEAR", 
-            "TRANSPARENT", "GLASS", "CRYSTAL", "PEARL", "GEM", "STONE", "ROCK", "PEBBLE", "BOULDER", 
-            "CLIFF", "CRAG", "PEAK", "SUMMIT", "APEX", "ZENITH", "PINNACLE", "CREST", "RIDGE", "SLOPE",
-            "INCLINE", "DESCENT", "DROP", "PLUNGE", "DIVE", "FALL", "SINK", "SUBMERGE", "DROWN", "SURFACE",
-            "EMERGE", "ARISE", "AWAKEN", "WAKE", "STIR", "ROUSE", "RUSTLE", "MURMUR", "HUM", "RUMBLE",
-            "THUNDER", "ROAR", "SOUND", "NOISE", "SONG", "NOTE", "TUNE", "MELODY", "CHORD", "HARMONY",
-            "RHYTHM", "BEAT", "PULSE", "THROB", "HEART", "SOUL", "MIND", "SPIRIT", "ESSENCE", "CORE", 
-            "ROOT", "SEED", "LEAF", "BRANCH", "STEM", "TRUNK", "BARK", "WOOD", "TIMBER", "LOG", "GROVE",
-            "THICKET", "WOODS", "JUNGLE", "RAINFOREST", "CANOPY", "VINE", "MOSS", "FERN", "GRASS", "WEED",
-            "FLOWER", "BLOOM", "BLOSSOM", "PETAL", "THORN", "BRIAR", "BUSH", "SHRUB", "PLANT", "FLORA", 
-            "FAUNA", "ANIMAL", "BEAST", "BIRD", "WING", "FEATHER", "BEAK", "CLAW", "PAW", "HOOF", "FUR", 
-            "HAIR", "SCALE", "SHELL", "FIN", "TAIL", "SCALE", "BONE", "SKELETON", "SKULL", "FOSSIL", 
-            "DUST", "ASH", "CINDER", "COAL", "EMBER", "FLAME", "FIRE", "INFERNO", "HEARTH", "STOVE", 
-            "OVEN", "FURNACE", "KILN", "FORGE", "SMITH", "METAL", "IRON", "STEEL", "BRASS", "COPPER", 
-            "SILVER", "GOLD", "PLATINUM", "DIAMOND", "RUBY", "SAPPHIRE", "EMERALD", "TOPAZ", "OPAL", 
-            "JADE", "QUARTZ", "AGATE", "ONYX", "AMETHYST", "GARNET", "CORAL", "IVORY", "SHELL", "CONCH", 
-            "CRAB", "FISH", "WHALE", "SHARK", "DOLPHIN", "SEAL", "WALRUS", "PENGUIN", "BEAR", "WOLF", 
-            "FOX", "DOG", "CAT", "LION", "TIGER", "PANTHER", "LEOPARD", "CHEETAH", "JAGUAR", "LYNX", 
-            "PUMA", "COUGAR", "DEER", "ELK", "MOOSE", "CARIBOU", "HORSE", "PONY", "ZEBRA", "GIRAFFE", 
-            "CAMEL", "ELEPHANT", "RHINO", "HIPPO", "MONKEY", "APE", "CHIMP", "GORILLA", "BABOON", "LEMUR",
-            "OSTRICH", "EMU", "EAGLE", "HAWK", "FALCON", "OWL", "CROW", "RAVEN", "DOVE", "PIGEON", "SWAN",
-            "GULL", "DUCK", "GOOSE", "PELICAN", "ROBIN", "SPARROW", "FINCH", "SWALLOW", "SWIFT", "LARK", 
-            "WREN", "THRUSH", "NIGHTINGALE", "STARLING", "WOODPECKER", "KINGFISHER", "PARROT", "MACAW", 
-            "COCKATOO", "TOUCAN", "CANARY", "BUDGIE", "FROG", "TOAD", "NEWT", "SALAMANDER", "LIZARD", 
-            "SNAKE", "TURTLE", "TORTOISE", "CROCODILE", "ALLIGATOR", "DRAGON", "DINOSAUR", "MONSTER", 
-            "DEVIL", "DEMON", "ANGEL", "FAIRY", "ELF", "GOBLIN", "TROLL", "ORC", "GIANT", "TITAN", "DWARF",
-            "GNOME", "HOBBIT", "WIZARD", "WITCH", "MAGE", "SORCERER", "SHAMAN", "WARLOCK", "CLERIC", 
-            "PRIEST", "DRUID", "PALADIN", "MONK", "ROGUE", "THIEF", "ASSASSIN", "NINJA", "SAMURAI", 
-            "KNIGHT", "WARRIOR", "SOLDIER", "FIGHTER", "ARCHER", "RANGER", "HUNTER", "SCOUT", "BARBARIAN",
-            "BERSERKER", "BARD", "MINSTREL", "POET", "SINGER", "DANCER", "ACTOR", "PLAYER", "PERFORMER", 
-            "ARTIST", "PAINTER", "SCULPTOR", "WRITER", "AUTHOR", "MAKER", "CREATOR", "BUILDER", "CRAFTER",
-            "WORKER", "LABORER", "FARMER", "MINER", "LUMBERJACK", "FISHERMAN", "SAILOR", "CAPTAIN", 
-            "PILOT", "DRIVER", "RIDER", "TRAVELER", "WANDERER", "PEACEFUL", "FLUID", "TIMELESS", 
-            "ABSOLUTE", "ETERNAL", "DISTANT", "LUCID", "FAR", "WONDER", "GLORY", "GRACE", "SOVEREIGN"
-        ];
+    const BGC = 10; // Dark Minimalism hex #0a0a0a roughly maps to rgb(10,10,10).
+    
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      background(BGC);
+      
+      // Initialize Aimless Void planktons (Brownian motion particles)
+      for (let i = 0; i < 200; i++) {
+        planktons.push(new Plankton());
+      }
+    }
+    
+    function draw() {
+      // State C: Persistence (The Ghostly Faint)
+      // We do not clear the canvas entirely. A 5% opacity refresh translates to alpha ~13
+      noStroke();
+      fill(BGC, BGC, BGC, 13);
+      rect(0, 0, width, height);
+      
+      // State A: Plankton background drift
+      for (let p of planktons) {
+        p.update();
+        p.display();
+      }
+      
+      // State B: The Stutter (Line Bursts)
+      for (let i = bursts.length - 1; i >= 0; i--) {
+        let b = bursts[i];
+        b.update();
+        b.display();
+        if (b.isDead()) {
+          bursts.splice(i, 1);
+        }
+      }
+      
+      // State D: The Water Butterfly (Coalescence & Evaporation)
+      if (state === 'D') {
+        dTimer++;
+        if (dTimer < 300) {
+          // Draw structural lines that "sweat" the droplets
+          for (let l of dLines) {
+            let fade = 1;
+            if (dTimer > 250) fade = map(dTimer, 250, 300, 1, 0); // fade out right before evaporation
+            stroke(200, 230, 255, l.alpha * fade);
+            strokeWeight(0.5); // thin like original lines
+            // Hand-drawn jitter for the sweating lines
+            let jx = map(noise(frameCount * 0.1, l.angle), 0, 1, -1, 1);
+            let jy = map(noise(frameCount * 0.1, l.angle + 100), 0, 1, -1, 1);
+            line(dCenter.x, dCenter.y, l.end.x + jx, l.end.y + jy);
+          }
+          
+          // Lines "sweat" water droplets coalescing into a shape
+          for (let d of droplets) {
+            d.update();
+            d.display();
+          }
+        } else if (dTimer === 300) {
+          // The Fail: Evaporation trigger. Disappointment of a fleeting glimmer.
+          for (let d of droplets) {
+            d.triggerEvaporate();
+          }
+        } else if (dTimer > 300) {
+          // Visualizing vapor evaporation
+          for (let i = droplets.length - 1; i >= 0; i--) {
+            let d = droplets[i];
+            d.updateEvaporate();
+            d.display();
+            if (d.alpha <= 0) {
+              droplets.splice(i, 1);
+            }
+          }
+          
+          if (droplets.length === 0 && state !== 'E') {
+            transitionToStateE();
+          }
+        }
+      }
+    }
+    
+    function mousePressed() {
+      if (state === 'E' || state === 'D') return; // lockout interactions during cinematic finale
+      
+      tapCount++;
+      
+      if (tapCount < 4) {
+        // State B: The First Tap & Stutter lines
+        bursts.push(new Burst(mouseX, mouseY));
+      } else if (tapCount === 4) {
+        // State D: Coalescence Trigger
+        state = 'D';
+        dTimer = 0;
+        initButterfly(mouseX, mouseY);
+      }
+    }
+    
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      background(BGC);
+    }
+    
+    function transitionToStateE() {
+      // State E: Discovery (The Turning Point)
+      state = 'E';
+      document.getElementById('discovery-word').classList.add('revealed');
+    }
+    
+    // --- PHYSICS & VISUAL CLASSES --- //
+    
+    class Plankton {
+      constructor() {
+        this.pos = createVector(random(width), random(height));
+        this.nx = random(1000);
+        this.ny = random(2000);
+        this.size = random(0.5, 2.5);
+      }
+      update() {
+        // Brownian motion combined with Taoist fluidity (Perlin noise drift)
+        let vx = map(noise(this.nx), 0, 1, -0.5, 0.5);
+        let vy = map(noise(this.ny), 0, 1, -0.5, 0.5);
+        this.pos.x += vx + random(-0.2, 0.2);
+        this.pos.y += vy + random(-0.2, 0.2);
+        this.nx += 0.005;
+        this.ny += 0.005;
         
-        let chosenWords = [];
-
-        const canvas = document.getElementById('atmosphere');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let isPitchBlack = false;
-
-        function resize() { 
-            width = window.innerWidth; height = window.innerHeight; 
-            canvas.width = width * window.devicePixelRatio; 
-            canvas.height = height * window.devicePixelRatio; 
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        // Wrap screen edges
+        if (this.pos.x < 0) this.pos.x = width;
+        if (this.pos.x > width) this.pos.x = 0;
+        if (this.pos.y < 0) this.pos.y = height;
+        if (this.pos.y > height) this.pos.y = 0;
+      }
+      display() {
+        noStroke();
+        // Faint glowing, bioluminescent presence
+        let alpha = map(noise(this.nx * 2), 0, 1, 20, 100);
+        fill(180, 230, 255, alpha);
+        circle(this.pos.x, this.pos.y, this.size);
+      }
+    }
+    
+    class Burst {
+        constructor(x, y) {
+            this.origin = createVector(x, y);
+            this.particles = [];
+            this.timer = 0;
+            this.lifeTime = random(80, 130);
+            
+            let numLines = Math.floor(random(25, 45)); // dense like the starburst from older versions
+            let baseAngle = random(TWO_PI);
+            
+            // Intention: Form a starburst of lines radiating outward, aggressively trembling
+            for(let i = 0; i < numLines; i++) {
+                let angle = baseAngle + (i * TWO_PI / numLines) + random(-0.2, 0.2);
+                let len = random(30, 240); // highly variable lengths matching the iconic "lined" burst
+                let tOffset = p5.Vector.fromAngle(angle).mult(len);
+                this.particles.push({
+                    curr: createVector(x, y),
+                    tOffset: tOffset,
+                    seed: random(1000),
+                    dissolved: false,
+                    vx: 0,
+                    vy: 0
+                });
+            }
         }
-        window.addEventListener('resize', resize); resize();
-
-        class Particle {
-            constructor(mode = 'drift', startX = null, startY = null) {
-                this.mode = mode; 
-                this.size = Math.random() * 1.5 + 0.5;
-                this.flapPhase = Math.random() * Math.PI * 2;
-                this.isMorphed = false;
-                
-                this.x = startX !== null ? startX : Math.random() * width;
-                this.y = startY !== null ? startY : Math.random() * height;
-                this.vx = 0;
-                this.vy = 0;
-                
-                if (mode === 'drift') {
-                    this.vx = (Math.random() - 0.5) * 0.15; 
-                    this.vy = (Math.random() - 0.5) * 0.15;
-                } else if (mode === 'scatter') {
-                    this.morphToScatter();
-                } else if (mode === 'cover') {
-                    this.morphToCover();
-                }
-            }
-
-            morphToScatter() {
-                this.mode = 'scatter';
-                this.isMorphed = true;
-                this.morphColor = `hsla(${Math.random() * 360}, 75%, 65%, 0.8)`;
-                this.morphSize = Math.random() * 25 + 15;
-                this.flapSpeed = Math.random() * 0.05 + 0.03;
-                let angle = Math.random() * Math.PI * 2;
-                let speed = Math.random() * 1.0 + 0.5;
-                this.vx = Math.cos(angle) * speed; 
-                this.vy = Math.sin(angle) * speed;
-            }
-
-            morphToCover() {
-                this.mode = 'cover';
-                this.isMorphed = true;
-                this.morphColor = `hsla(${Math.random() * 360}, 75%, 65%, 1.0)`;
-                this.morphSize = Math.random() * 35 + 20;
-                let angle = Math.random() * Math.PI * 2;
-                let dist = Math.max(width, height) + 150;
-                this.x = width/2 + Math.cos(angle) * dist;
-                this.y = height/2 + Math.sin(angle) * dist;
-                
-                this.targetX = width/2 + (Math.random() - 0.5) * (width * 0.8);
-                this.targetY = height/2 + (Math.random() - 0.5) * (height * 0.8);
-                this.vx = 0; 
-                this.vy = 0;
-                this.flapSpeed = Math.random() * 0.05 + 0.03;
-                this.stateTime = 0;
-                this.hasExploded = false;
-            }
+        update() {
+            this.timer++;
+            let progress = this.timer / this.lifeTime;
+            let collapseThreshold = random(0.6, 0.8); // Defines the breaking limit
             
-            update(dt) {
-                if (this.mode === 'cover') {
-                    this.stateTime += dt;
-                    if (this.stateTime < 3.0) {
-                        this.vx += (this.targetX - this.x) * 0.05 * (dt * 60);
-                        this.vy += (this.targetY - this.y) * 0.05 * (dt * 60);
-                        let friction = Math.pow(0.85, dt * 60);
-                        this.vx *= friction; this.vy *= friction;
-                    } else if (this.stateTime > 3.5) {
-                        if (!this.hasExploded) {
-                            let angle = Math.atan2(this.y - height/2, this.x - width/2) + (Math.random()-0.5)*0.5;
-                            let burstSpd = Math.random() * 5 + 3;
-                            this.vx = Math.cos(angle) * burstSpd; 
-                            this.vy = Math.sin(angle) * burstSpd;
-                            this.hasExploded = true;
-                        }
-                    }
-                    this.x += this.vx * (dt * 60); this.y += this.vy * (dt * 60);
-                    this.flapPhase += this.flapSpeed * (this.hasExploded ? 6.0 : 3.0) * (dt * 60); 
+            for(let p of this.particles) {
+                if (progress < collapseThreshold) {
+                    // Stutter physics: trying desperately to form the intended shape
+                    let target = p5.Vector.add(this.origin, p.tOffset);
+                    let lerpAmt = 0.04;
+                    p.curr.x = lerp(p.curr.x, target.x, lerpAmt);
+                    p.curr.y = lerp(p.curr.y, target.y, lerpAmt);
+                    
+                    // Tremor noise reflecting the 'struggle'
+                    let intensity = map(progress, 0, collapseThreshold, 0.5, 6);
+                    let tx = map(noise(p.seed, frameCount * 0.15), 0, 1, -1, 1) * intensity;
+                    let ty = map(noise(p.seed + 50, frameCount * 0.15), 0, 1, -1, 1) * intensity;
+                    
+                    p.curr.x += tx;
+                    p.curr.y += ty;
                 } else {
-                    this.x += this.vx * (dt * 60); this.y += this.vy * (dt * 60);
-                    if (this.mode === 'drift') {
-                        let spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                        if (spd > 0.4) { this.vx = (this.vx/spd)*0.4; this.vy = (this.vy/spd)*0.4; }
-
-                        if (this.x < -20) this.x = width + 20; if (this.x > width + 20) this.x = -20;
-                        if (this.y < -20) this.y = height + 20; if (this.y > height + 20) this.y = -20;
+                    // Dissolve / Collapse (A thought that fizzles out completely)
+                    if (!p.dissolved) {
+                        p.dissolved = true;
+                        p.vx = random(-3, 3);
+                        p.vy = random(-1, 5); // Fall and scatter abruptly
                     }
-                    if (this.isMorphed) this.flapPhase += this.flapSpeed * 4.0 * (dt * 60);
-                }
-            }
-            
-            draw(ctx) {
-                if (!this.isMorphed) {
-                    ctx.fillStyle = `rgba(180, 200, 215, 0.4)`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-                } else {
-                    ctx.save();
-                    ctx.translate(this.x, this.y);
-                    
-                    if(Math.abs(this.vx) > 0.01 || Math.abs(this.vy) > 0.01) {
-                        ctx.rotate(Math.atan2(this.vy, this.vx) + Math.PI / 2);
-                    }
-                    
-                    let flapScale = 0.6 + 0.4 * Math.cos(this.flapPhase);
-                    let bob = Math.sin(this.flapPhase) * 5;
-                    
-                    ctx.translate(0, bob);
-                    ctx.scale(flapScale * (this.morphSize / 100), this.morphSize / 100);
-                    ctx.translate(-32, -26); 
-                    
-                    ctx.fillStyle = this.morphColor;
-                    ctx.fillStyle = this.morphColor;
-                    ctx.shadowBlur = 0; // Disabling drop-shadow on swarms to prevent WebKit GPU crash
-                    ctx.fill(svgPath2D);
-                    
-                    ctx.restore();
+                    p.curr.x += p.vx + random(-1, 1);
+                    p.curr.y += p.vy + random(-1, 1);
+                    p.vy += 0.1; // mild gravity pulling down the failures
                 }
             }
         }
-
-        let particles = [];
-        for (let i = 0; i < 150; i++) particles.push(new Particle('drift'));
-
-        let ghostButterflies = [];
+        display() {
+            let progress = this.timer / this.lifeTime;
+            let alpha = 200;
+            if (progress >= 0.7) {
+                alpha = map(progress, 0.7, 1.0, 200, 0); // Fade into the ghostly landscape
+            }
+            
+            for(let p of this.particles) {
+                // Bring back the crisp, hyper-starburst "lined" aesthetic perfectly!
+                stroke(220, 240, 255, alpha * 0.6); // slightly translucent straight lines
+                strokeWeight(0.8); // very thin, elegant rays
+                line(this.origin.x, this.origin.y, p.curr.x, p.curr.y);
+                
+                // Point tip showing the struggle
+                noStroke();
+                fill(255, 255, 255, alpha);
+                circle(p.curr.x, p.curr.y, 2.5);
+            }
+        }
+        isDead() {
+            return this.timer >= this.lifeTime;
+        }
+    }
+    
+    function initButterfly(cx, cy) {
+        dCenter = createVector(cx, cy);
         
-        class GhostButterfly {
-            constructor(x, y, color, isBlue, onComplete) {
-                this.x = x; this.y = y;
-                this.color = color;
-                this.isBlue = isBlue;
-                this.onComplete = onComplete;
-                this.age = 0;
-                this.opacity = 0;
-                this.size = 140;
-                this.flapPhase = 0;
-                this.vx = 0; this.vy = 0;
-                this.dying = false; 
-                
-                if (this.isBlue) {
-                    this.duration = 3.0; 
-                    let dists = [
-                        { x: -150, y: y, d: x }, { x: width + 150, y: y, d: width - x },
-                        { x: x, y: -150, d: y }, { x: x, y: height + 150, d: height - y }
-                    ];
-                    let t = dists.reduce((p, c) => p.d < c.d ? p : c);
-                    this.startX = x; this.startY = y;
-                    this.targetX = t.x; this.targetY = t.y;
-                } else {
-                    this.vx = (Math.random() - 0.5) * 1.5; this.vy = (Math.random() - 0.5) * 1.5;
-                    this.targetX = width/2; this.targetY = height/2;
-                    this.angle = Math.atan2(this.vy, this.vx) + Math.PI/2;
-                    this.isClickable = false;
-                    setTimeout(() => { this.isClickable = true; }, 4000); 
-                }
-            }
-            
-            update(dt) {
-                this.age += dt;
-                
-                if (this.dying) {
-                    this.opacity -= dt * 2.5; 
-                    if (this.opacity <= 0) return false; 
-                } else if (this.isBlue) {
-                    let progress = this.age / this.duration;
-                    if (progress >= 1) {
-                        this.dying = true;
-                    }
-                    
-                    if (progress < 0.15) this.opacity = progress * 6.66;
-                    else if (progress > 0.85) this.opacity = (1 - progress) * 6.66;
-                    else this.opacity = 1;
-
-                    this.x = this.startX + (this.targetX - this.startX) * progress;
-                    this.y = this.startY + (this.targetY - this.startY) * progress;
-                    
-                    this.flapPhase = progress * Math.PI * 4;
-                    this.angle = Math.atan2(this.targetY - this.startY, this.targetX - this.startX) + Math.PI/2;
-
-                } else {
-                    if (this.age < 2.0) this.opacity = this.age / 2.0; else this.opacity = 1;
-                    
-                    if (Math.random() < 0.015) {
-                        this.targetX = Math.random() * (width - 150) + 75;
-                        this.targetY = Math.random() * (height - 150) + 75;
-                    }
-                    
-                    this.vx += (this.targetX - this.x) * 0.0005 * (dt * 60);
-                    this.vy += (this.targetY - this.y) * 0.0005 * (dt * 60);
-                    
-                    let spd = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
-                    if(spd > 1.0) { this.vx = (this.vx/spd)*1.0; this.vy = (this.vy/spd)*1.0; }
-                    if(spd < 0.01) { this.vx += 0.01; this.vy += 0.01; } 
-                    
-                    this.x += this.vx * (dt * 60); this.y += this.vy * (dt * 60);
-                    this.flapPhase += dt * 1.5; 
-                    
-                    let targetAngle = Math.atan2(this.vy, this.vx) + Math.PI/2;
-                    if (this.angle === undefined) this.angle = targetAngle;
-                    let diff = targetAngle - this.angle;
-                    while (diff < -Math.PI) diff += Math.PI * 2;
-                    while (diff > Math.PI) diff -= Math.PI * 2;
-                    this.angle += diff * 0.05 * (dt * 60);
-                }
-                return true;
-            }
-            
-            draw(ctx) {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, Math.min(1, this.opacity));
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle);
-                
-                let flapScale = 0.6 + 0.4 * Math.cos(this.flapPhase);
-                let bob = Math.sin(this.flapPhase) * 6;
-                
-                ctx.translate(0, bob);
-                ctx.scale(flapScale * (this.size/100), this.size/100);
-                ctx.translate(-32, -26); 
-                
-                ctx.shadowColor = this.color; ctx.shadowBlur = 30; ctx.fillStyle = this.color;
-                ctx.fill(svgPath2D);
-                
-                // Explicitly clear shadow before restore (WebKit GPU cache bug)
-                ctx.shadowBlur = 0;
-                
-                ctx.restore();
-            }
-        }
-
-        let step = 1; 
-        let locked = false;
-        let pointer = { x: -1000, y: -1000, isActive: false };
-        let currentMaxLines = 3;
-
-        function updatePointer(e) {
-            let px = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
-            let py = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
-            pointer.x = px || width/2; pointer.y = py || height/2;
-        }
-
-        window.addEventListener('pointerdown', e => {
-            if (locked) return;
-            if (e.target && typeof e.target.closest === 'function') {
-                if (e.target.closest('.storm-word') || e.target.closest('.wa-btn')) return; 
-            }
-            
-            updatePointer(e);
-
-            if (step === 8) {
-                for (let i = ghostButterflies.length - 1; i >= 0; i--) {
-                    let gb = ghostButterflies[i];
-                    if (!gb.isBlue && gb.isClickable && !gb.dying) {
-                        let dx = pointer.x - gb.x; let dy = pointer.y - gb.y;
-                        if (dx*dx + dy*dy < 15000) { 
-                            gb.dying = true; 
-                            handleTouch8();
-                            return;
-                        }
-                    }
-                }
-                return; 
-            }
-            
-            // Step 10 logic dynamically moved to auto-pilot.
-            if (step > 7) return; 
-            
-            pointer.isActive = true; 
-
-            if ([1, 2, 4, 6].includes(step)) {
-                currentMaxLines = 35; 
-            }
-            else if (step === 3 || step === 5) {
-                locked = true; pointer.isActive = false; 
-                ghostButterflies.push(new GhostButterfly(pointer.x, pointer.y, "rgba(90, 180, 255, 0.9)", true, () => {
-                    step++; locked = false;
-                }));
-            }
-            else if (step === 7) {
-                locked = true; pointer.isActive = false; 
-                ghostButterflies.push(new GhostButterfly(pointer.x, pointer.y, "rgba(255, 60, 60, 0.9)", false));
-                setTimeout(() => { step = 8; locked = false; }, 4000); 
-            }
-        });
-
-        window.addEventListener('pointermove', e => { if (pointer.isActive) updatePointer(e); });
-
-        window.addEventListener('pointerup', () => {
-            if (locked || !pointer.isActive) return;
-            pointer.isActive = false;
-            if ([1, 2, 4, 6].includes(step)) step++;
-        });
-
-        function handleTouch8() {
-            step = -1; 
-            document.getElementById('gradient-bg').style.opacity = '0';
-            document.getElementById('grain-layer').style.opacity = '0';
-            
-            let shuffled = shuffleArray([...particles]);
-            shuffled.forEach((p, i) => {
-                setTimeout(() => { p.morphToScatter(); }, i * 35); // One by One Morph Transition
-            });
-            
-            let idkwts = document.getElementById('idkwts-text');
-            idkwts.style.opacity = '1';
-            
-            setTimeout(() => {
-                idkwts.style.opacity = '0';
-                setTimeout(() => { 
-                    locked = false; 
-                    startWordStorm(10);
-                    step = 11;
-                }, 3000);
-            }, 6000);
-        }
-
-        function shuffleArray(array) {
-            let temp = array.slice();
-            for (let i = temp.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                const t = temp[i];
-                temp[i] = temp[j];
-                temp[j] = t;
-            }
-            return temp;
-        }
-
-        function startWordStorm(count) {
-            const container = document.getElementById('storm-container');
-            container.innerHTML = ''; 
-            container.style.opacity = '1';
-            
-            let available = WORD_POOL.filter(w => !chosenWords.includes(w));
-            available = shuffleArray(available);
-            let currentWords = available.slice(0, count);
-            
-            let cols = count >= 6 ? 4 : 3; let rows = count >= 6 ? 3 : 2;
-            let cellW = width / cols; let cellH = height / rows;
-            let cells = [];
-            for(let c=0; c<cols; c++) { for(let r=0; r<rows; r++) { cells.push({c, r}); } }
-            cells = shuffleArray(cells).slice(0, count);
-
-            let wordSelected = false; 
-
-            currentWords.forEach((word, index) => {
-                let cell = cells[index];
-                let wDiv = document.createElement('div');
-                wDiv.className = 'storm-word';
-                
-                let posX = cell.c * cellW + (cellW * 0.5) + (Math.random() * 40 - 20);
-                let posY = cell.r * cellH + (cellH * 0.5) + (Math.random() * 40 - 20);
-                
-                posX = Math.max(80, Math.min(width - 80, posX));
-                posY = Math.max(150, Math.min(height - 80, posY)); 
-
-                wDiv.style.left = `${posX}px`; wDiv.style.top = `${posY}px`;
-                wDiv.innerHTML = `<div class="storm-word-inner" style="animation-delay: ${Math.random() * 2}s">${word}</div>`;
-                container.appendChild(wDiv);
-
-                wDiv.addEventListener('pointerdown', (e) => {
-                    e.stopPropagation();
-                    if (wordSelected) return; 
-                    wordSelected = true;
-                    
-                    wDiv.classList.add('selected');
-                    chosenWords.push(word);
-                    
-                    let header = document.getElementById('chosen-words-header');
-                    header.innerText = chosenWords.join("   ·   ");
-                    header.style.opacity = '1';
-                    
-                    let inner = wDiv.querySelector('.storm-word-inner');
-                    inner.style.animation = 'none';
-                    inner.style.color = '#88cfff';
-                    inner.style.textShadow = '0 0 20px rgba(136, 207, 255, 0.9)';
-                    inner.style.transform = 'scale(1.2)';
-                    
-                    Array.from(container.children).forEach(child => {
-                        if(child !== wDiv) {
-                            child.style.opacity = '0';
-                            child.style.pointerEvents = 'none';
-                        }
-                    });
-
-                    setTimeout(() => {
-                        container.style.opacity = '0';
-                        setTimeout(() => {
-                            if (chosenWords.length < 4) {
-                                startWordStorm(5); 
-                            } else {
-                                document.getElementById('chosen-words-header').style.opacity = '0';
-                                triggerUnveilSequence(); 
-                            }
-                        }, 1000);
-                    }, 1000);
-                }, {once: true});
+        // Form the persistent structure of lines that will sweat the droplets
+        for(let i=0; i<50; i++) {
+            let angle = random(TWO_PI);
+            let len = random(40, 260);
+            dLines.push({
+                angle: angle,
+                end: p5.Vector.add(dCenter, p5.Vector.fromAngle(angle).mult(len)),
+                alpha: random(30, 150)
             });
         }
-
-        function triggerFinalParagraph() {
-            let finalContainer = document.getElementById('story-container');
-            let textDiv = document.getElementById('final-sentence');
-            let btn = document.getElementById('whatsapp-btn');
-            
-            let w = chosenWords;
-
-            // Define semantic themes
-            const THEMES = {
-                COSMOS: ["SPACE", "STAR", "GALAXY", "COSMOS", "NIGHT", "MIDNIGHT", "SKY", "VAST", "INFINITY", "VOID", "EXPANSE", "GLOW", "LUMINESCENT", "SPARK", "LIGHT", "SUN", "MOON", "ECLIPSE", "LUNAR", "SOLAR", "ORBIT", "PLANET", "METEOR", "COMET"],
-                NATURE: ["FOREST", "LAKE", "SNOW", "MOUNTAIN", "OCEAN", "RIVER", "VALLEY", "CANYON", "FIELD", "MEADOW", "WILD", "PINE", "POND", "STREAM", "BROOK", "CREEK", "WATERFALL", "WOOD", "TIMBER", "LEAF", "BRANCH", "STEM", "TRUNK", "BARK", "GRASS", "WEED", "FLOWER", "BLOOM"],
-                JOURNEY: ["PATH", "TRAIL", "TRACK", "WANDER", "ROAM", "SEEK", "FIND", "DISCOVER", "PIONEER", "NAVIGATE", "EXPLORE", "FRONTIER", "BORDER", "EDGE", "BEYOND", "CROSSING", "VOYAGE", "TREK", "QUEST", "EXPEDITION", "MARCH", "ODYSSEY", "SAIL", "CRUISE"],
-                STILLNESS: ["CALM", "QUIET", "STILLNESS", "PEACE", "SILENCE", "BREATH", "DRIFT", "WHISPER", "SOLITUDE", "NULL", "EMPTY", "BLANK", "CLEAR", "TRANSPARENT", "PEACEFUL", "FLUID", "TIMELESS", "ABSOLUTE", "ETERNAL", "CHILL", "FREEZE", "FLOAT", "GLIDE"]
-            };
-
-            let themeScores = { COSMOS: 0, NATURE: 0, JOURNEY: 0, STILLNESS: 0 };
-            
-            w.forEach(word => {
-                if (THEMES.COSMOS.includes(word)) themeScores.COSMOS++;
-                else if (THEMES.NATURE.includes(word)) themeScores.NATURE++;
-                else if (THEMES.JOURNEY.includes(word)) themeScores.JOURNEY++;
-                else if (THEMES.STILLNESS.includes(word)) themeScores.STILLNESS++;
-            });
-
-            let dominantTheme = Object.keys(themeScores).reduce((a, b) => themeScores[a] > themeScores[b] ? a : b);
-
-            const proseMap = {
-                COSMOS: [
-                    `You cannot measure your worth against the sky. Stop trying to steer, and just let go.`,
-                    `You don't have to carry the world.<br><br>The stars do not ask for your permission.<br><br>Gravity loses its hold. You are allowed to fly.`,
-                    `We spend so much time fighting the current, trying to define our exact coordinates. But precision is terribly overrated. When you look at the vast expanse above, you realise that the void was never meant to be conquered. It was only meant to be experienced. Stop trying to steer the ship.`
-                ],
-                NATURE: [
-                    `The wild does not ask for permission to exist. Neither should you.`,
-                    `Everything grows exactly as it should.<br><br>Stop forcing the seasons.<br><br>Watch the leaves fall, and let things fall into place.`,
-                    `There is a strange comfort in accepting that you cannot control the forest. The natural world simply adapts. If you find yourself completely lost, remember that growth requires a certain level of uncertainty. You do not need absolute clarity to move forward. Trust the earth, and let the rest burn away.`
-                ],
-                JOURNEY: [
-                    `It is completely fine to wander. The true path only appears when you finally throw away the map.`,
-                    `It is beautiful to walk without a map.<br><br>The destination was never the point.<br><br>The compass is broken. Keep walking anyway.`,
-                    `Most missteps are not mistakes; they are just unplanned detours teaching you how to navigate. If the road leads you entirely off your original timeline, abandon it without regret. Let the journey guide you instead. You do not need to know the ending to appreciate the rhythm of the walk.`
-                ],
-                STILLNESS: [
-                    `Stop fixing what isn't broken. Find the stillness, and just exist here for a moment.`,
-                    `Quiet the noise in your mind.<br><br>There is nothing left to fix right now.<br><br>Release your breath. Just be here.`,
-                    `We exhaust ourselves searching for meaning, constantly trying to optimize our lives. Sometimes, the most radical act is to simply stop. Focus on the absolute quiet. Let the reality of the silence wash over you. There is no urgency in the water, and there is no judgement in the air. Rest.`
-                ]
-            };
-
-            let selectedTheme = proseMap[dominantTheme] || proseMap.COSMOS;
-            let rawText = selectedTheme[Math.floor(Math.random() * selectedTheme.length)];
-            
-            // Generate dynamic image based on chosen words and theme
-            let imagePrompt = `Breathtaking cinematic vision of ${dominantTheme.toLowerCase()}. Key elements: ${chosenWords.join(', ')}. Abstract, ethereal, dark background, glowing energy, highly detailed 8k photography.`;
-            let promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=800&height=400&nologo=true&seed=${Math.floor(Math.random()*10000)}`;
-
-            textDiv.innerHTML = `
-                <div style="margin-bottom: 35px; width: 100%; min-height: 250px; background: rgba(0,0,0,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative;">
-                    <div id="loading-spinner" style="color: #88cfff; font-size: 0.9rem; font-style: italic; letter-spacing: 3px; animation: shimmer 2s infinite alternate; position: absolute; z-index: 1;">Manifesting your vision...</div>
-                    <img id="generated-img" src="${promptUrl}" style="width:100%; height:auto; max-height: 400px; object-fit:cover; border-radius: 4px; box-shadow: 0 0 40px rgba(136, 207, 255, 0.2); opacity: 0; transition: opacity 1.5s ease; position: relative; z-index: 2;" onload="document.getElementById('loading-spinner').style.display='none'; this.style.opacity='1';" />
-                </div>
-                ${rawText}
-            `;
-            
-            let plainText = rawText.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>?/gm, '');
-            let encodedText = encodeURIComponent(`A moment of clarity:\n\n"${plainText}"\n\nBehold my vision: ${promptUrl}\n\nRead more at https://failonpurpose.com`);
-            btn.href = `https://wa.me/?text=${encodedText}`;
-
-            finalContainer.style.opacity = '1';
+        
+        let numDrops = 300;
+        for (let i = 0; i < numDrops; i++) {
+            droplets.push(new Droplet(cx, cy));
         }
-
-        function triggerUnveilSequence() {
-            canvas.style.zIndex = "100";
+    }
+    
+    class Droplet {
+        constructor(cx, cy) {
+            this.origin = createVector(cx, cy);
+            this.curr = createVector(cx + random(-20, 20), cy + random(-20, 20)); // "sweat" outward initially
+            this.seed = random(1000);
+            this.alpha = random(40, 180);
+            this.size = random(2, 5);
             
-            for(let i=0; i<200; i++) particles.push(new Particle('cover'));
+            // Generate coordinates along a mathematical Parametric Butterfly Curve
+            let t = random(0, 12 * PI);
+            let e = exp(cos(t));
+            let s = pow(sin(t/12), 5);
+            let x = sin(t) * (e - 2*cos(4*t) - s);
+            let y = -cos(t) * (e - 2*cos(4*t) - s); // flip upright intentionally negative
             
-            setTimeout(() => { triggerFinalParagraph(); }, 3000); 
-
-            setTimeout(() => {
-                canvas.style.zIndex = "1";
-                document.getElementById('story-container').style.pointerEvents = 'auto';
-            }, 6500);
+            let scaleFact = random(12, 18);
+            this.tOffset = createVector(x * scaleFact, y * scaleFact);
+            this.vp = createVector(0,0);
         }
-
-        let lastTime = performance.now();
-        function animate() {
-            let currentTime = performance.now();
-            let dt = (currentTime - lastTime) / 1000;
-            if (dt > 0.1) dt = 0.016; 
-            lastTime = currentTime;
-
-            ctx.clearRect(0, 0, width, height);
+        update() {
+            // Fluidly move towards butterfly shape parametric targets
+            let breath = map(sin(frameCount * 0.03 + this.seed), -1, 1, 0.9, 1.1);
+            let targetOffset = p5.Vector.mult(this.tOffset, breath);
+            let target = p5.Vector.add(this.origin, targetOffset);
             
-            // Explicitly flush shadow state to prevent WebKit GPU crash after blue butterfly
-            ctx.shadowBlur = 0;
+            this.curr.x = lerp(this.curr.x, target.x, 0.015);
+            this.curr.y = lerp(this.curr.y, target.y, 0.015);
             
-            if (pointer.isActive && !isPitchBlack && [1, 2, 4, 6].includes(step)) {
-                let nearest = particles.filter(p => !p.isMorphed).map(p => ({p, distSq: (p.x - pointer.x)**2 + (p.y - pointer.y)**2})).sort((a,b) => a.distSq - b.distSq);
-                let linesDrawn = 0; ctx.lineWidth = 1.0; ctx.lineCap = 'round';
-                
-                for (let i = 0; i < nearest.length; i++) {
-                    if (linesDrawn >= currentMaxLines) break; 
-                    if (nearest[i].distSq < 150000) {
-                        let opacity = (1 - Math.sqrt(nearest[i].distSq)/387) * 0.9;
-                        ctx.strokeStyle = `rgba(180, 210, 230, ${opacity})`;
-                        ctx.beginPath(); ctx.moveTo(pointer.x, pointer.y); ctx.lineTo(nearest[i].p.x, nearest[i].p.y); ctx.stroke();
-                        
-                        nearest[i].p.vx += (pointer.x - nearest[i].p.x) * 0.0001 * (dt * 60); 
-                        nearest[i].p.vy += (pointer.y - nearest[i].p.y) * 0.0001 * (dt * 60);
-                        linesDrawn++;
-                    }
-                }
-            }
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.update(dt);
-                p.draw(ctx);
-                
-                if ((p.mode === 'cover' && p.hasExploded) || p.mode === 'scatter') {
-                    if (p.x < -200 || p.x > width + 200 || p.y < -200 || p.y > height + 200) {
-                        particles.splice(i, 1);
-                    }
-                }
-            }
-
-            for (let i = ghostButterflies.length - 1; i >= 0; i--) {
-                let gb = ghostButterflies[i];
-                if (!gb.update(dt)) {
-                    ghostButterflies.splice(i, 1);
-                    if (gb.isBlue && gb.onComplete) gb.onComplete();
-                } else {
-                    gb.draw(ctx);
-                }
-            }
-            
-            requestAnimationFrame(animate);
+            // Taoist Fluidity non-resistant offset
+            this.curr.x += map(noise(this.seed, frameCount * 0.01), 0, 1, -1, 1);
+            this.curr.y += map(noise(this.seed + 200, frameCount * 0.01), 0, 1, -1, 1);
         }
-        requestAnimationFrame(animate);
-    </script>
+        display() {
+            noStroke();
+            fill(180, 230, 255, this.alpha);
+            circle(this.curr.x, this.curr.y, this.size);
+        }
+        triggerEvaporate() {
+            // Initiate phase transition from fluid to vapor
+            let angle = random(TWO_PI);
+            let force = random(1, 5);
+            this.vp = p5.Vector.fromAngle(angle).mult(force);
+            this.vp.y -= random(2, 5); // strongly pulls up like evaporating vapor
+        }
+        updateEvaporate() {
+            this.curr.add(this.vp);
+            this.vp.y -= 0.05; // accelerates upward
+            this.curr.x += random(-1, 1);
+            this.curr.y += random(-1, 1);
+            
+            this.alpha -= 1.5;
+            this.size = lerp(this.size, 15, 0.03); // gracefully expand into smoke
+        }
+    }
+  </script>
 </body>
 </html>
