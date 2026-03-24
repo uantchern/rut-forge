@@ -386,21 +386,73 @@
             this.pos = createVector(x, y);
             this.seed = random(1000);
             
-            // Flutter outwards aimlessly toward the edges leaving their origin behind
+            // Define an underlying absolute escape vector (the edge they eventually disappear over)
             let angle = random(TWO_PI);
-            this.vel = p5.Vector.fromAngle(angle).mult(random(0.3, 0.8));
+            this.escapeDir = p5.Vector.fromAngle(angle); 
+            
             this.color = color(90, 210, 255); // vibrant tiny blue bugs 
             this.size = random(2.5, 4.5);
+            
+            // Behavioral Machine States
+            this.actionTimer = 0;
+            this.mode = 'HESITATE';
+            this.vel = createVector(0,0);
         }
         update() {
-            // Nervous flutter jitter simulation 
-            let flutterX = map(noise(this.seed, frameCount * 0.05), 0, 1, -1, 1) * 1.5;
-            let flutterY = map(noise(this.seed + 100, frameCount * 0.05), 0, 1, -1, 1) * 1.5;
-            this.pos.x += this.vel.x + flutterX;
-            this.pos.y += this.vel.y + flutterY;
+            this.actionTimer--;
+            if (this.actionTimer <= 0) {
+                // Shift to a new randomized emotional state
+                let r = random();
+                if (r < 0.15) {
+                    this.mode = 'REVERSE'; // shy, pulling back / reversing
+                    this.actionTimer = random(15, 45);
+                    this.vel = p5.Vector.mult(this.escapeDir, random(-1.5, -0.5));
+                } else if (r < 0.45) {
+                    this.mode = 'HESITATE'; // haltingly, stopping
+                    this.actionTimer = random(30, 80);
+                    this.vel = createVector(0, 0);
+                } else if (r < 0.60) {
+                    this.mode = 'STUTTER'; // embarrassed trembling
+                    this.actionTimer = random(15, 35);
+                    this.vel = createVector(0, 0);
+                } else if (r < 0.80) {
+                    this.mode = 'CURIOUS'; // slow meandering sideways, exploring
+                    this.actionTimer = random(40, 90);
+                    let wanderAngle = this.escapeDir.heading() + random(-PI/2, PI/2);
+                    this.vel = p5.Vector.fromAngle(wanderAngle).mult(random(0.3, 0.8));
+                } else {
+                    this.mode = 'DART'; // excitedly speeding up towards the edge
+                    this.actionTimer = random(12, 25);
+                    let dartAngle = this.escapeDir.heading() + random(-0.3, 0.3);
+                    this.vel = p5.Vector.fromAngle(dartAngle).mult(random(3, 8)); // very fast burst!
+                }
+            }
             
-            // Accelerating organically over the edge into the void
-            this.vel.mult(1.003);
+            // Execute the physical translation of the current emotional state
+            if (this.mode === 'STUTTER') {
+                // Rapid frantic shaking perfectly locked in place
+                this.pos.x += random(-1.5, 1.5);
+                this.pos.y += random(-1.5, 1.5);
+            } else if (this.mode === 'HESITATE') {
+                // Almost perfectly still, merely breathing heavily
+                this.pos.x += random(-0.2, 0.2);
+                this.pos.y += random(-0.2, 0.2);
+            } else {
+                // Standard velocity displacement
+                this.pos.add(this.vel);
+                // Severe kinetic friction ensures excitedly speeding up "Darts" slow aggressively to a halt
+                if (this.mode === 'DART') this.vel.mult(0.85); 
+            }
+            
+            // Ambient organic flutter overlay guaranteeing it never entirely looks mechanical
+            let flutterX = map(noise(this.seed, frameCount * 0.1), 0, 1, -0.6, 0.6);
+            let flutterY = map(noise(this.seed + 100, frameCount * 0.1), 0, 1, -0.6, 0.6);
+            this.pos.x += flutterX;
+            this.pos.y += flutterY;
+            
+            // Add a very subtle, inescapable ambient draft pushing them towards the edge eventually
+            // so they don't get trapped eternally hesitating on the screen
+            this.pos.add(p5.Vector.mult(this.escapeDir, 0.25));
         }
         display() {
             // Fast opaque object crossing a translucent canvas functionally burns
