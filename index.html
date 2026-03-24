@@ -9,7 +9,7 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: #0a0a0a;
+      background-color: #f6f8ee; /* Bright summer day, sunlit edge of a forest */
       overflow: hidden;
       font-family: 'Georgia', serif;
       -webkit-touch-callout: none;
@@ -38,22 +38,22 @@
     let dTimer = 0;
     let dCenter;
     
-    const BGC = 10;
+    const BGC = [246, 248, 238]; // Soft bright summer sunlit background
     
     function setup() {
       createCanvas(windowWidth, windowHeight);
-      background(BGC);
+      background(BGC[0], BGC[1], BGC[2]);
       
-      // Initialize Aimless Void stars (stationary, slowly fading)
+      // Initialize Summer Sun Motes (Golden Pollen/Light)
       for (let i = 0; i < 200; i++) {
         stars.push(new Star());
       }
     }
     
     function draw() {
-      // Persistence (The Ghostly Faint)
+      // Persistence (The Ghostly Faint: canvas trail erase relying on the summer background array)
       noStroke();
-      fill(BGC, BGC, BGC, 13);
+      fill(BGC[0], BGC[1], BGC[2], 13);
       rect(0, 0, width, height);
       
       // State A: Starry background drift
@@ -135,7 +135,7 @@
     
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
-      background(BGC);
+      background(BGC[0], BGC[1], BGC[2]);
     }
     
     // --- PHYSICS & VISUAL CLASSES --- //
@@ -144,16 +144,16 @@
       constructor() {
         this.pos = createVector(random(width), random(height));
         this.nx = random(1000);
-        this.size = random(0.5, 2.0);
+        this.size = random(1.0, 3.5); // Plumper floating summer pollen/motes
       }
       update() {
-        // Subtle glow flickering, strictly stationary to avoid the "sperm" trailing
+        // Subtle glow flickering, stationary shimmering summer heat refraction
         this.nx += 0.003;
       }
       display() {
         noStroke();
-        let alpha = map(noise(this.nx), 0, 1, 10, 90);
-        fill(180, 230, 255, alpha);
+        let alpha = map(noise(this.nx), 0, 1, 10, 150);
+        fill(255, 230, 100, alpha); // Golden sunlight pollen motes
         circle(this.pos.x, this.pos.y, this.size);
       }
     }
@@ -280,7 +280,7 @@
                  }
                  
                  noStroke();
-                 fill(220, 240, 255, p.alpha);
+                 fill(15, 45, 90, p.alpha); // Deep ink/indigo contrasting strongly against the bright summer sun
                  circle(p.curr.x, p.curr.y, 2.0); // Size dropped to 2.0 mitigating the heavy "swimming head" visual
             }
         }
@@ -378,7 +378,7 @@
         }
         display() {
             noStroke();
-            fill(180, 230, 255, this.alpha);
+            fill(15, 45, 90, this.alpha); // Deep indigo/azure silhouettes standing against the golden light
             circle(this.curr.x, this.curr.y, this.size);
         }
         triggerEvaporate() {
@@ -408,7 +408,7 @@
             let angle = random(TWO_PI);
             this.escapeDir = p5.Vector.fromAngle(angle); 
             
-            this.color = color(90, 210, 255); // vibrant tiny blue bugs 
+            this.color = color(10, 80, 210); // Vibrant deep morpho blue bugs against bright daylight
             this.size = random(3.0, 5.0);
             
             // Voice-Flight Metaphor State Machine
