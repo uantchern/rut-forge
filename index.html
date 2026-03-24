@@ -239,41 +239,63 @@
         }
     }
     
-    function initButterfly(cx, cy) {
+    function initButterfly(clickX, clickY) {
+        // Force the majestic butterfly to assemble perfectly centered on the screen
+        let cx = width / 2;
+        let cy = height / 2;
         dCenter = createVector(cx, cy);
         
-        // Sweat droplets directly off the "lines of the past" (the faint ghosts)
+        let targetCount = 600; // incredibly dense point tracing to ensure a solid contiguous outline
+        let ghosts = [];
+        // Harvest every single ghostly survivor from the past attempts
         for (let b of bursts) {
-            for (let p of b.particles) {
-                // Keep the original ghosts haunting on canvas; only spawn droplets atop 40% of them
-                if (random() > 0.4) continue;
-                droplets.push(new Droplet(p.curr.x, p.curr.y, cx, cy));
-            }
+            for (let p of b.particles) ghosts.push(p);
+        }
+        
+        let existingCount = ghosts.length;
+        let total = Math.max(targetCount, existingCount);
+        let i = 0;
+        
+        // Sweat droplets directly off the "lines of the past"
+        for (let g of ghosts) {
+            let tVal = (i / total) * 12 * PI; // perfectly distribute smoothly along the entire butterfly curve
+            droplets.push(new Droplet(g.curr.x, g.curr.y, cx, cy, tVal));
+            i++;
+        }
+        
+        // If the ghosts aren't dense enough to draw the solid butterfly, spawn extra droplets sweating from the center
+        // to fill the mathematical gaps so the viewer undeniably recognizes the majestic shape!
+        while (i < targetCount) {
+            let tVal = (i / total) * 12 * PI;
+            let auxX = cx + random(-30, 30);
+            let auxY = cy + random(-30, 30);
+            droplets.push(new Droplet(auxX, auxY, cx, cy, tVal));
+            i++;
         }
         
         // Critically DO NOT wipe `bursts` here. Let them persistently haunt the background!
     }
     
     class Droplet {
-        constructor(sx, sy, cx, cy) {
+        constructor(sx, sy, cx, cy, tVal) {
             this.origin = createVector(cx, cy);
             this.curr = createVector(sx, sy); // starts EXACTLY where the ghost trace froze
             this.seed = random(1000);
             this.alpha = random(80, 220);
-            this.size = random(1, 2);
+            this.size = random(2.0, 3.5); // rigid robust dots for pure visual clarity
             
             // "Sweating" delay: it must visually grow ON the ghost trace before sliding off
             this.sweatTimer = random(50, 200); // Delayed significantly longer to watch Sweat build heavily
             
-            // Generate coordinates along a mathematical Parametric Butterfly Curve
-            let t = random(0, 12 * PI);
+            // Pure evenly-spaced placement along Temple's Parametric Butterfly Curve
+            let t = tVal; 
             let e = exp(cos(t));
             let s = pow(sin(t/12), 5);
             let x = sin(t) * (e - 2*cos(4*t) - s);
             let y = -cos(t) * (e - 2*cos(4*t) - s); // flip upright intentionally negative
             
-            // Uniform scale perfectly carves a recognizable crisp butterfly silhouette outlining
-            let scaleFact = 20; 
+            // Dynamically macroscopic! Perfectly sizing the butterfly to fill standard viewing ratios on both mobile & desktop
+            let scaleFact = Math.min(windowWidth, windowHeight) / 9; 
             this.tOffset = createVector(x * scaleFact, y * scaleFact);
             this.vp = createVector(0,0);
         }
