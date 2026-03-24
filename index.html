@@ -399,6 +399,9 @@
                 ctx.shadowColor = this.color; ctx.shadowBlur = 30; ctx.fillStyle = this.color;
                 ctx.fill(svgPath2D);
                 
+                // Explicitly clear shadow before restore (WebKit GPU cache bug)
+                ctx.shadowBlur = 0;
+                
                 ctx.restore();
             }
         }
@@ -623,10 +626,21 @@
 
             let selectedTheme = proseMap[dominantTheme] || proseMap.COSMOS;
             let rawText = selectedTheme[Math.floor(Math.random() * selectedTheme.length)];
-            textDiv.innerHTML = rawText;
+            
+            // Generate dynamic image based on chosen words and theme
+            let imagePrompt = `Breathtaking cinematic vision of ${dominantTheme.toLowerCase()}. Key elements: ${chosenWords.join(', ')}. Abstract, ethereal, dark background, glowing energy, highly detailed 8k photography.`;
+            let promptUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=800&height=400&nologo=true&seed=${Math.floor(Math.random()*10000)}`;
+
+            textDiv.innerHTML = `
+                <div style="margin-bottom: 35px; width: 100%; min-height: 250px; background: rgba(0,0,0,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div id="loading-spinner" style="color: #88cfff; font-size: 0.9rem; font-style: italic; letter-spacing: 3px; animation: shimmer 2s infinite alternate; position: absolute; z-index: 1;">Manifesting your vision...</div>
+                    <img id="generated-img" src="${promptUrl}" style="width:100%; height:auto; max-height: 400px; object-fit:cover; border-radius: 4px; box-shadow: 0 0 40px rgba(136, 207, 255, 0.2); opacity: 0; transition: opacity 1.5s ease; position: relative; z-index: 2;" onload="document.getElementById('loading-spinner').style.display='none'; this.style.opacity='1';" />
+                </div>
+                ${rawText}
+            `;
             
             let plainText = rawText.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>?/gm, '');
-            let encodedText = encodeURIComponent(`A moment of clarity:\n\n"${plainText}"\n\nRead more at https://failonpurpose.com`);
+            let encodedText = encodeURIComponent(`A moment of clarity:\n\n"${plainText}"\n\nBehold my vision: ${promptUrl}\n\nRead more at https://failonpurpose.com`);
             btn.href = `https://wa.me/?text=${encodedText}`;
 
             finalContainer.style.opacity = '1';
@@ -653,6 +667,9 @@
             lastTime = currentTime;
 
             ctx.clearRect(0, 0, width, height);
+            
+            // Explicitly flush shadow state to prevent WebKit GPU crash after blue butterfly
+            ctx.shadowBlur = 0;
             
             if (pointer.isActive && !isPitchBlack && [1, 2, 4, 6].includes(step)) {
                 let nearest = particles.filter(p => !p.isMorphed).map(p => ({p, distSq: (p.x - pointer.x)**2 + (p.y - pointer.y)**2})).sort((a,b) => a.distSq - b.distSq);
