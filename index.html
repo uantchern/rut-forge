@@ -36,10 +36,23 @@
     let tinyButterflies = []; // Persistent tracking for disappearing voices
     let clouds = []; // Massive Ghibli volumetric clouds
     let tapCount = 0;
+    let absoluteTapCount = 0; // Tracks across the entire session to drive physical state colors
     let dTimer = 0;
     let dCenter;
     
-    // Obsolete flat color array replaced natively by the atmospheric drawing gradient 
+    // Dynamically returns the current thematic palette based cleanly on the 25-click loop
+    function getCurrentThemeColor() {
+        let cycleNum = Math.floor(Math.max(0, absoluteTapCount - 1) / 25);
+        let palettes = [
+            color(20, 55, 90),   // Cycle 1: Deep Navy
+            color(190, 45, 55),  // Cycle 2: Rich Crimson
+            color(40, 130, 65),  // Cycle 3: Forest Green
+            color(140, 30, 180), // Cycle 4: Deep Violet
+            color(220, 110, 20), // Cycle 5: Autumn Golden
+            color(30, 160, 190)  // Cycle 6: Vivid Cyan
+        ];
+        return palettes[cycleNum % palettes.length];
+    }
     
     function setup() {
       createCanvas(windowWidth, windowHeight);
@@ -139,12 +152,13 @@
       if (state === 'D') return; // lockout interactions during cinematic finale
       
       tapCount++;
+      absoluteTapCount++; // Never resets, continuously tracking absolute lifetime clicks
       
-      if (tapCount < 15) {
-        // State B: The Stutter points (requires 3 sets of 5 clicks)
+      if (tapCount < 25) {
+        // The morphing evolution natively builds across 25 clicks!
         bursts.push(new Burst(mouseX, mouseY, tapCount));
-      } else if (tapCount === 15) {
-        // State D: Coalescence Trigger on the 15th tap
+      } else if (tapCount === 25) {
+        // State D: The final magical Coalescence Trigger structurally capped exactly on the 25th tap of the cycle
         state = 'D';
         dTimer = 0;
         initButterfly(mouseX, mouseY);
@@ -279,34 +293,41 @@
             this.particles = [];
             this.timer = 0;
             this.lifeTime = random(100, 150);
-            this.shapeRadius = random(80, 160);
             this.collapseThreshold = random(0.55, 0.75);
             
-            let numLines = Math.floor(random(40, 80)); // rich particle burst
-            
-            // Intention: Utterly asymmetrical pareidolia shapes (clouds/nebulas) strictly breaking any "firework" symmetry
-            let shapeSeed = random(1000);
+            this.themeColor = getCurrentThemeColor(); // Inherit dynamically evolving color state
+            let numLines = Math.floor(random(50, 90)); 
+            let scaleR = min(width, height) / 10.0;
             
             for(let i = 0; i < numLines; i++) {
-                // Distribute randomly across to break generic uniform spacing
-                let angle = random(TWO_PI);
-                // Fundamentally fill the inner volume area, eliminating the hollow "firework ring" effect
-                let baseR = random(15, this.shapeRadius); 
+                let ang = random(TWO_PI * 5); 
+                let e = 2.71828;
+                let p = pow(e, cos(ang)) - 2 * cos(4 * ang) - pow(sin(ang / 12), 5);
                 
-                // Pure asymmetric noise distortion clustering the dots into deep organic clouds
-                let px = baseR * cos(angle);
-                let py = baseR * sin(angle);
-                let nVal = noise(px * 0.015 + shapeSeed, py * 0.015 + shapeSeed);
+                // Base Butterfly Mathematical Tracing Coordinates mathematically scaled
+                let tx = sin(ang) * p * scaleR;
+                let ty = -cos(ang) * p * scaleR;
                 
-                // Aggressive stretching of the cloud contour
-                let r = baseR * map(nVal, 0, 1, 0.1, 2.5);
-                let tOffset = p5.Vector.fromAngle(angle).mult(r);
+                // The explicit user mapping: 1-5 vague contour, 6-10 half-formed, 11+ hyper-distinct bounds
+                if (tapIndex <= 5) {
+                    // Vague heavy pareidolia scrambling visually disguising the shape
+                    tx += random(-140, 140);
+                    ty += random(-140, 140);
+                } else if (tapIndex <= 10) {
+                    // 50% formed, visibly anchoring tighter pulling back toward the parametric curves
+                    tx += random(-40, 40);
+                    ty += random(-40, 40);
+                } else {
+                    // 100% formed! Crystalline exact param-equation traces from click 11 continuously through 24
+                    tx += random(-5, 5);
+                    ty += random(-5, 5);
+                }
                 
                 let isVoiceless = random() < 0.90; // 90% of the burst dots are trapped directly in the center, voiceless
                 
                 this.particles.push({
-                    curr: createVector(x + random(-40, 40), y + random(-40, 40)), // Specks vastly scattered and spread out
-                    tOffset: tOffset,
+                    curr: createVector(x + random(-45, 45), y + random(-45, 45)), // Specks vastly scattered and spread out
+                    tOffset: createVector(tx, ty),
                     seed: random(1000),
                     dissolved: false,
                     isVoiceless: isVoiceless,
@@ -369,7 +390,7 @@
                 let numVoices = Math.floor(random(1, 4)); // Small disappearing voices
                 for(let i=0; i<numVoices; i++) {
                     let ghostOrigin = random(this.particles);
-                    tinyButterflies.push(new TinyButterfly(ghostOrigin.curr.x, ghostOrigin.curr.y));
+                    tinyButterflies.push(new TinyButterfly(ghostOrigin.curr.x, ghostOrigin.curr.y, this.themeColor));
                 }
             }
         }
@@ -395,7 +416,7 @@
                  }
                  
                  noStroke();
-                 fill(20, 55, 90, p.alpha); // Deep realistic navy specks
+                 fill(red(this.themeColor), green(this.themeColor), blue(this.themeColor), p.alpha); // Dynamically evolving colors tracking the active cycle
                  circle(p.curr.x, p.curr.y, random(3.0, 5.5)); // Specks larger and organically varied in structural scale
             }
         }
@@ -444,6 +465,7 @@
         constructor(sx, sy, cx, cy, tVal) {
             this.origin = createVector(cx, cy);
             this.curr = createVector(sx, sy); // starts EXACTLY where the ghost trace froze
+            this.themeColor = getCurrentThemeColor(); // Unify the evaporation traces completely with the current color cycle
             this.seed = random(1000);
             this.targetAlpha = random(80, 220);
             this.alpha = this.targetAlpha; // default solid, overwritable
@@ -493,7 +515,7 @@
         }
         display() {
             noStroke();
-            fill(15, 45, 90, this.alpha); // Deep indigo/azure silhouettes standing against the golden light
+            fill(red(this.themeColor), green(this.themeColor), blue(this.themeColor), this.alpha); // Adhering purely to the absolute click cycle mapping
             circle(this.curr.x, this.curr.y, this.size);
         }
         triggerEvaporate() {
@@ -515,7 +537,7 @@
     }
 
     class TinyButterfly {
-        constructor(x, y) {
+        constructor(x, y, themeColor) {
             this.pos = createVector(x, y);
             this.seed = random(1000);
             
@@ -523,7 +545,7 @@
             let targetAngle = random(-PI/2.5, PI/2.5); // Natively drifts rightward over time, occasionally upwards
             this.escapeDir = p5.Vector.fromAngle(targetAngle); 
             
-            this.color = color(10, 80, 210); // Vibrant deep morpho blue bugs against bright daylight
+            this.color = themeColor || color(10, 80, 210); // Inherit the correct 25-click cycle color palette natively 
             this.size = random(3.0, 5.0);
             
             // Behavioral Machine States
@@ -623,7 +645,7 @@
             for (let i = 0; i < this.history.length; i++) {
                 let h = this.history[i];
                 let trailAlpha = map(i, 0, this.history.length, 0, 150);
-                fill(10, 80, 210, trailAlpha); // Fading deep blue trail dots
+                fill(red(this.color), green(this.color), blue(this.color), trailAlpha); // Dynamic theme history 
                 circle(h.x, h.y, 1.2); 
             }
             
