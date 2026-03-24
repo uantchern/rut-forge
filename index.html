@@ -51,10 +51,9 @@
     }
     
     function draw() {
-      // Persistence (The Ghostly Faint: canvas trail erase relying on the summer background array)
-      noStroke();
-      fill(BGC[0], BGC[1], BGC[2], 13);
-      rect(0, 0, width, height);
+      // Obliterated the 13-alpha partial clearing. The canvas clears aggressively fully every frame, physically 
+      // rendering it impossible for ANY entity to draw a smeared biological tail / tadpole trace into the background.
+      background(BGC[0], BGC[1], BGC[2]);
       
       // State A: Starry background drift
       for (let s of stars) {
@@ -411,10 +410,13 @@
             this.color = color(10, 80, 210); // Vibrant deep morpho blue bugs against bright daylight
             this.size = random(3.0, 5.0);
             
-            // Voice-Flight Metaphor State Machine
+            // Behavioral Machine States
             this.actionTimer = 0;
             this.mode = 'HOVER';
             this.vel = createVector(0,0);
+            
+            // Explicitly tracking flight path to render dashed lines instead of biological smears
+            this.history = []; 
         }
         update() {
             this.actionTimer--;
@@ -489,9 +491,25 @@
             if (this.mode !== 'DESCENDING') {
                 this.pos.add(p5.Vector.mult(this.escapeDir, 0.15));
             }
+            
+            // Push isolated exact coordinates occasionally to form a strict dotted flight map (not a continuous smear)
+            if (frameCount % 4 === 0) {
+                this.history.push(createVector(this.pos.x, this.pos.y));
+                if (this.history.length > 25) {
+                    this.history.shift(); // Trail drops off naturally after 25 coordinates
+                }
+            }
         }
         display() {
             noStroke();
+            
+            // Draw the structural dashed trail explicitly so it never smears like a tadpole
+            for (let i = 0; i < this.history.length; i++) {
+                let h = this.history[i];
+                let trailAlpha = map(i, 0, this.history.length, 0, 150);
+                fill(10, 80, 210, trailAlpha); // Fading deep blue trail dots
+                circle(h.x, h.y, 1.2); 
+            }
             
             // If ZIG_ZAG (Staccato), explicitly skip drawing frames to create "breathless fragments" visually!
             if (this.mode === 'ZIG_ZAG' && frameCount % 6 < 3) {
