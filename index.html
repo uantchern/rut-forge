@@ -187,11 +187,14 @@
                 let r = baseR * map(nVal, 0, 1, 0.1, 2.5);
                 let tOffset = p5.Vector.fromAngle(angle).mult(r);
                 
+                let isVoiceless = random() < 0.90; // 90% of the burst dots are trapped directly in the center, voiceless
+                
                 this.particles.push({
-                    curr: createVector(x, y),
+                    curr: createVector(x + random(-8, 8), y + random(-8, 8)), // Shivered core start
                     tOffset: tOffset,
                     seed: random(1000),
                     dissolved: false,
+                    isVoiceless: isVoiceless,
                     vx: 0,
                     vy: 0,
                     alpha: 255,
@@ -206,7 +209,14 @@
             
             for(let p of this.particles) {
                 if (progress < this.collapseThreshold) {
-                    // Stutter physics: trying desperately to form the intended shape
+                    if (p.isVoiceless) {
+                        // The 90% that are trapped in silence. They just shiver nervously packed in the core point.
+                        p.curr.x += random(-0.3, 0.3);
+                        p.curr.y += random(-0.3, 0.3);
+                        continue; // Bypass all outward expansion math entirely
+                    }
+                    
+                    // Stutter physics: the brave 10% trying desperately to form the intended meaning
                     let target = p5.Vector.add(this.origin, p.tOffset);
                     // Uses personalized lerp speeds so the blob scrambles into place instead of expanding together
                     p.curr.x = lerp(p.curr.x, target.x, p.lerpSpeed);
@@ -252,18 +262,26 @@
             let progress = this.timer / this.lifeTime;
             
             for(let p of this.particles) {
-                 // Dynamic alpha scaling
+                 // Dynamic alpha scaling, deliberately capping high-end max alpha to 120 so the dots
+                 // mathematically CANNOT burn a long continuous white smear-trail into the background buffer!
                  if (progress >= this.collapseThreshold && progress < 1.0) {
-                       p.alpha = map(progress, this.collapseThreshold, 1.0, 255, 30);
+                       p.alpha = map(progress, this.collapseThreshold, 1.0, 120, 20);
                  } else if (progress >= 1.0) {
-                       p.alpha = 30; // locked as a haunted ghost trace permanently
+                       p.alpha = 20; // locked as a permanently subdued haunted ghost trace 
                  } else {
-                       p.alpha = 255;
+                       p.alpha = 120; // High enough to see clearly, low enough to wipe cleanly without tracing
+                 }
+                 
+                 // Flashing discrete render trick: actively exploring dots blink rapidly so they
+                 // literally draw as a broken sequence of disjointed dots. Impossible to look like a solid tracked line.
+                 let isExploring = (!p.isVoiceless && progress < this.collapseThreshold);
+                 if (isExploring && (frameCount % 20 < 10)) {
+                     continue; // Skip the draw call 50% of the time, fragmenting the flight path entirely!
                  }
                  
                  noStroke();
                  fill(220, 240, 255, p.alpha);
-                 circle(p.curr.x, p.curr.y, 2.5);
+                 circle(p.curr.x, p.curr.y, 2.0); // Size dropped to 2.0 mitigating the heavy "swimming head" visual
             }
         }
     }
