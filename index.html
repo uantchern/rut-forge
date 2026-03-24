@@ -22,104 +22,67 @@
       width: 100vw;
       height: 100vh;
     }
-    
-    #discovery-word {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: rgba(220, 240, 255, 0); /* Biolo-luminescent white */
-      font-size: 28px;
-      letter-spacing: 0.3em;
-      pointer-events: none;
-      transition: color 5s ease-in-out;
-      text-shadow: 0 0 24px rgba(180, 230, 255, 0.5);
-      font-style: italic;
-    }
-    
-    .revealed {
-      color: rgba(220, 240, 255, 0.8) !important;
-    }
   </style>
 </head>
 <body>
-  <div id="discovery-word">listen.</div>
   
   <script>
     // System State Architecture
-    let state = 'A'; // A: Void, B: Stutter, D: Water Butterfly, E: Discovery
-    // Note: State C (Ghostly Faint) is natively expressed via translucent canvas refreshing.
+    let state = 'A'; // A: Void, B: Stutter, D: Water Butterfly
     
-    let planktons = [];
+    let stars = [];
     let bursts = [];
     let droplets = [];
     let tapCount = 0;
     let dTimer = 0;
     let dCenter;
-    let dLines = [];
     
-    const BGC = 10; // Dark Minimalism hex #0a0a0a roughly maps to rgb(10,10,10).
+    const BGC = 10;
     
     function setup() {
       createCanvas(windowWidth, windowHeight);
       background(BGC);
       
-      // Initialize Aimless Void planktons (Brownian motion particles)
+      // Initialize Aimless Void stars (stationary, slowly fading)
       for (let i = 0; i < 200; i++) {
-        planktons.push(new Plankton());
+        stars.push(new Star());
       }
     }
     
     function draw() {
-      // State C: Persistence (The Ghostly Faint)
-      // We do not clear the canvas entirely. A 5% opacity refresh translates to alpha ~13
+      // Persistence (The Ghostly Faint)
       noStroke();
       fill(BGC, BGC, BGC, 13);
       rect(0, 0, width, height);
       
-      // State A: Plankton background drift
-      for (let p of planktons) {
-        p.update();
-        p.display();
+      // State A: Starry background drift
+      for (let s of stars) {
+        s.update();
+        s.display();
       }
       
-      // State B: The Stutter (Line Bursts)
+      // State B: The Stutter (Bursts of points)
       for (let i = bursts.length - 1; i >= 0; i--) {
         let b = bursts[i];
         b.update();
         b.display();
-        if (b.isDead()) {
-          bursts.splice(i, 1);
-        }
       }
       
       // State D: The Water Butterfly (Coalescence & Evaporation)
       if (state === 'D') {
         dTimer++;
-        if (dTimer < 300) {
-          // Draw structural lines that "sweat" the droplets
-          for (let l of dLines) {
-            let fade = 1;
-            if (dTimer > 250) fade = map(dTimer, 250, 300, 1, 0); // fade out right before evaporation
-            stroke(200, 230, 255, l.alpha * fade);
-            strokeWeight(0.5); // thin like original lines
-            // Hand-drawn jitter for the sweating lines
-            let jx = map(noise(frameCount * 0.1, l.angle), 0, 1, -1, 1);
-            let jy = map(noise(frameCount * 0.1, l.angle + 100), 0, 1, -1, 1);
-            line(dCenter.x, dCenter.y, l.end.x + jx, l.end.y + jy);
-          }
-          
-          // Lines "sweat" water droplets coalescing into a shape
+        if (dTimer < 350) {
+          // Drops "sweat" from past traces coalescing into a shape
           for (let d of droplets) {
             d.update();
             d.display();
           }
-        } else if (dTimer === 300) {
-          // The Fail: Evaporation trigger. Disappointment of a fleeting glimmer.
+        } else if (dTimer === 350) {
+          // Evaporation trigger
           for (let d of droplets) {
             d.triggerEvaporate();
           }
-        } else if (dTimer > 300) {
+        } else if (dTimer > 350) {
           // Visualizing vapor evaporation
           for (let i = droplets.length - 1; i >= 0; i--) {
             let d = droplets[i];
@@ -130,22 +93,24 @@
             }
           }
           
-          if (droplets.length === 0 && state !== 'E') {
-            transitionToStateE();
+          if (droplets.length === 0) {
+            // Seamlessly return to Void
+            state = 'A';
+            tapCount = 0;
           }
         }
       }
     }
     
     function mousePressed() {
-      if (state === 'E' || state === 'D') return; // lockout interactions during cinematic finale
+      if (state === 'D') return; // lockout interactions during cinematic finale
       
       tapCount++;
       
-      if (tapCount < 4) {
-        // State B: The First Tap & Stutter lines
-        bursts.push(new Burst(mouseX, mouseY));
-      } else if (tapCount === 4) {
+      if (tapCount < 5) {
+        // State B: The Stutter points
+        bursts.push(new Burst(mouseX, mouseY, tapCount));
+      } else if (tapCount === 5) {
         // State D: Coalescence Trigger
         state = 'D';
         dTimer = 0;
@@ -158,77 +123,67 @@
       background(BGC);
     }
     
-    function transitionToStateE() {
-      // State E: Discovery (The Turning Point)
-      state = 'E';
-      document.getElementById('discovery-word').classList.add('revealed');
-    }
-    
     // --- PHYSICS & VISUAL CLASSES --- //
     
-    class Plankton {
+    class Star {
       constructor() {
         this.pos = createVector(random(width), random(height));
         this.nx = random(1000);
-        this.ny = random(2000);
-        this.size = random(0.5, 2.5);
+        this.size = random(0.5, 2.0);
       }
       update() {
-        // Brownian motion combined with Taoist fluidity (Perlin noise drift)
-        let vx = map(noise(this.nx), 0, 1, -0.5, 0.5);
-        let vy = map(noise(this.ny), 0, 1, -0.5, 0.5);
-        this.pos.x += vx + random(-0.2, 0.2);
-        this.pos.y += vy + random(-0.2, 0.2);
-        this.nx += 0.005;
-        this.ny += 0.005;
-        
-        // Wrap screen edges
-        if (this.pos.x < 0) this.pos.x = width;
-        if (this.pos.x > width) this.pos.x = 0;
-        if (this.pos.y < 0) this.pos.y = height;
-        if (this.pos.y > height) this.pos.y = 0;
+        // Subtle glow flickering, strictly stationary to avoid the "sperm" trailing
+        this.nx += 0.003;
       }
       display() {
         noStroke();
-        // Faint glowing, bioluminescent presence
-        let alpha = map(noise(this.nx * 2), 0, 1, 20, 100);
+        let alpha = map(noise(this.nx), 0, 1, 10, 90);
         fill(180, 230, 255, alpha);
         circle(this.pos.x, this.pos.y, this.size);
       }
     }
     
     class Burst {
-        constructor(x, y) {
+        constructor(x, y, tapIndex) {
             this.origin = createVector(x, y);
             this.particles = [];
             this.timer = 0;
-            this.lifeTime = random(80, 130);
+            this.lifeTime = random(100, 150);
+            this.shapeRadius = random(80, 160);
+            this.collapseThreshold = random(0.55, 0.75);
             
-            let numLines = Math.floor(random(25, 45)); // dense like the starburst from older versions
-            let baseAngle = random(TWO_PI);
+            let numLines = Math.floor(random(40, 80)); // rich particle burst
+            let sides = (tapIndex % 3) + 3; // 3: Triangle, 4: Square, 5: Pentagon
             
-            // Intention: Form a starburst of lines radiating outward, aggressively trembling
+            // Intention: Form a different geometric shape per tap
             for(let i = 0; i < numLines; i++) {
-                let angle = baseAngle + (i * TWO_PI / numLines) + random(-0.2, 0.2);
-                let len = random(30, 240); // highly variable lengths matching the iconic "lined" burst
-                let tOffset = p5.Vector.fromAngle(angle).mult(len);
+                let side = Math.floor(random(sides));
+                let angleA = (side / sides) * TWO_PI;
+                let angleB = ((side + 1) / sides) * TWO_PI;
+                
+                let pA = p5.Vector.fromAngle(angleA).mult(this.shapeRadius);
+                let pB = p5.Vector.fromAngle(angleB).mult(this.shapeRadius);
+                
+                // Interpolate randomly along the polygon edge
+                let tOffset = p5.Vector.lerp(pA, pB, random());
+                
                 this.particles.push({
                     curr: createVector(x, y),
                     tOffset: tOffset,
                     seed: random(1000),
                     dissolved: false,
                     vx: 0,
-                    vy: 0
+                    vy: 0,
+                    alpha: 255
                 });
             }
         }
         update() {
-            this.timer++;
+            this.timer += 0.5; // 50% slower burst speed per request
             let progress = this.timer / this.lifeTime;
-            let collapseThreshold = random(0.6, 0.8); // Defines the breaking limit
             
             for(let p of this.particles) {
-                if (progress < collapseThreshold) {
+                if (progress < this.collapseThreshold) {
                     // Stutter physics: trying desperately to form the intended shape
                     let target = p5.Vector.add(this.origin, p.tOffset);
                     let lerpAmt = 0.04;
@@ -236,76 +191,72 @@
                     p.curr.y = lerp(p.curr.y, target.y, lerpAmt);
                     
                     // Tremor noise reflecting the 'struggle'
-                    let intensity = map(progress, 0, collapseThreshold, 0.5, 6);
-                    let tx = map(noise(p.seed, frameCount * 0.15), 0, 1, -1, 1) * intensity;
-                    let ty = map(noise(p.seed + 50, frameCount * 0.15), 0, 1, -1, 1) * intensity;
+                    let intensity = map(progress, 0, this.collapseThreshold, 0.5, 4);
+                    let tx = map(noise(p.seed, frameCount * 0.1), 0, 1, -1, 1) * intensity;
+                    let ty = map(noise(p.seed + 50, frameCount * 0.1), 0, 1, -1, 1) * intensity;
                     
                     p.curr.x += tx;
                     p.curr.y += ty;
-                } else {
-                    // Dissolve / Collapse (A thought that fizzles out completely)
+                } else if (progress < 1.0) {
+                    // Dissolve / Collapse 
                     if (!p.dissolved) {
                         p.dissolved = true;
-                        p.vx = random(-3, 3);
-                        p.vy = random(-1, 5); // Fall and scatter abruptly
+                        p.vx = random(-2, 2);
+                        p.vy = random(-1, 3); // Fall and scatter abruptly
                     }
-                    p.curr.x += p.vx + random(-1, 1);
-                    p.curr.y += p.vy + random(-1, 1);
-                    p.vy += 0.1; // mild gravity pulling down the failures
+                    p.curr.x += p.vx + random(-0.5, 0.5);
+                    p.curr.y += p.vy + random(-0.5, 0.5);
+                    p.vy += 0.05; // mild gravity
+                } else {
+                    // Ghostly faintt: freezing visually permanently instead of wiping
+                    p.vx = 0;
+                    p.vy = 0;
                 }
             }
         }
         display() {
             let progress = this.timer / this.lifeTime;
-            let alpha = 200;
-            if (progress >= 0.7) {
-                alpha = map(progress, 0.7, 1.0, 200, 0); // Fade into the ghostly landscape
-            }
             
             for(let p of this.particles) {
-                // Bring back the crisp, hyper-starburst "lined" aesthetic perfectly!
-                stroke(220, 240, 255, alpha * 0.6); // slightly translucent straight lines
-                strokeWeight(0.8); // very thin, elegant rays
-                line(this.origin.x, this.origin.y, p.curr.x, p.curr.y);
-                
-                // Point tip showing the struggle
-                noStroke();
-                fill(255, 255, 255, alpha);
-                circle(p.curr.x, p.curr.y, 2.5);
+                 // Dynamic alpha scaling
+                 if (progress >= this.collapseThreshold && progress < 1.0) {
+                       p.alpha = map(progress, this.collapseThreshold, 1.0, 255, 30);
+                 } else if (progress >= 1.0) {
+                       p.alpha = 30; // locked as a haunted ghost trace permanently
+                 } else {
+                       p.alpha = 255;
+                 }
+                 
+                 noStroke();
+                 fill(220, 240, 255, p.alpha);
+                 circle(p.curr.x, p.curr.y, 2.5);
             }
-        }
-        isDead() {
-            return this.timer >= this.lifeTime;
         }
     }
     
     function initButterfly(cx, cy) {
         dCenter = createVector(cx, cy);
         
-        // Form the persistent structure of lines that will sweat the droplets
-        for(let i=0; i<50; i++) {
-            let angle = random(TWO_PI);
-            let len = random(40, 260);
-            dLines.push({
-                angle: angle,
-                end: p5.Vector.add(dCenter, p5.Vector.fromAngle(angle).mult(len)),
-                alpha: random(30, 150)
-            });
+        // Sweat droplets directly off the "lines of the past" (the faint ghosts)
+        for (let b of bursts) {
+            for (let p of b.particles) {
+                // Skips 50% randomly to thin it out so it coalesces cleanly
+                if (random() > 0.5) continue;
+                droplets.push(new Droplet(p.curr.x, p.curr.y, cx, cy));
+            }
         }
         
-        let numDrops = 300;
-        for (let i = 0; i < numDrops; i++) {
-            droplets.push(new Droplet(cx, cy));
-        }
+        // Wipe old bursts as they are now reincarnated into droplets
+        bursts = [];
     }
     
     class Droplet {
-        constructor(cx, cy) {
+        constructor(sx, sy, cx, cy) {
             this.origin = createVector(cx, cy);
-            this.curr = createVector(cx + random(-20, 20), cy + random(-20, 20)); // "sweat" outward initially
+            this.curr = createVector(sx, sy); // starts EXACTLY where the ghost trace froze
             this.seed = random(1000);
-            this.alpha = random(40, 180);
-            this.size = random(2, 5);
+            this.alpha = random(80, 220);
+            this.size = random(2, 4);
             
             // Generate coordinates along a mathematical Parametric Butterfly Curve
             let t = random(0, 12 * PI);
@@ -324,8 +275,12 @@
             let targetOffset = p5.Vector.mult(this.tOffset, breath);
             let target = p5.Vector.add(this.origin, targetOffset);
             
-            this.curr.x = lerp(this.curr.x, target.x, 0.015);
-            this.curr.y = lerp(this.curr.y, target.y, 0.015);
+            // Starts slow and speeds up beautifully
+            let dist = p5.Vector.dist(this.curr, target);
+            let force = constrain(map(dist, 0, 300, 0.01, 0.05), 0.01, 0.05);
+            
+            this.curr.x = lerp(this.curr.x, target.x, force);
+            this.curr.y = lerp(this.curr.y, target.y, force);
             
             // Taoist Fluidity non-resistant offset
             this.curr.x += map(noise(this.seed, frameCount * 0.01), 0, 1, -1, 1);
@@ -341,16 +296,16 @@
             let angle = random(TWO_PI);
             let force = random(1, 5);
             this.vp = p5.Vector.fromAngle(angle).mult(force);
-            this.vp.y -= random(2, 5); // strongly pulls up like evaporating vapor
+            this.vp.y -= random(2, 6); // strongly pulls up like evaporating vapor
         }
         updateEvaporate() {
             this.curr.add(this.vp);
-            this.vp.y -= 0.05; // accelerates upward
+            this.vp.y -= 0.1; // accelerates upward rapidly
             this.curr.x += random(-1, 1);
             this.curr.y += random(-1, 1);
             
             this.alpha -= 1.5;
-            this.size = lerp(this.size, 15, 0.03); // gracefully expand into smoke
+            this.size = lerp(this.size, 15, 0.04); // gracefully expand into smoke
         }
     }
   </script>
