@@ -173,36 +173,69 @@
     
     function drawGrass() {
         noFill();
-        let windTime = frameCount * 0.02; // Global sweeping breeze
+        let windTime = frameCount * 0.018; 
         
-        // Massive loop constructing native 2D bent vectors tracking the wind
-        // Draw BACK layer (darker, shorter, dense shadow meadow)
-        stroke(35, 90, 45, 180); // Deep realistic shadowed wildgrass
-        strokeWeight(2.5);
-        for (let x = 0; x <= width; x += 5) { 
-            // Ghibli organized wind wave physically rolling across the field (sin + noise)
-            let wave = sin(x * 0.006 + windTime) * 25; 
-            let windBend = wave + map(noise(x * 0.02, windTime), 0, 1, -25, 25); 
-            let heightVar = map(noise(x * 0.1), 0, 1, height * 0.05, height * 0.20);
-            
-            beginShape();
-            vertex(x, height);
-            quadraticVertex(x, height - heightVar * 0.6, x + windBend, height - heightVar); 
-            endShape();
-        }
+        let layers = 6; // 6 planes of absolute photorealistic depth
         
-        // Draw FRONT layer (brighter, taller, overlapping beautifully catching the sun)
-        stroke(75, 130, 60, 200); // Realistic sunlit grass structure
-        strokeWeight(3.0);
-        for (let x = 0; x <= width; x += 8) { 
-            let wave = sin((x+100) * 0.006 + windTime) * 35; // offset wave naturally
-            let windBend = wave + map(noise((x+100) * 0.02, windTime), 0, 1, -35, 35); 
-            let heightVar = map(noise((x+100) * 0.1), 0, 1, height * 0.08, height * 0.32);
+        for (let l = 0; l < layers; l++) {
+            let depthP = l / (layers - 1); // 0.0 to 1.0
             
-            beginShape();
-            vertex(x, height);
-            quadraticVertex(x, height - heightVar * 0.6, x + windBend, height - heightVar); 
-            endShape();
+            // Physics attributes per layer
+            let strokeW = map(depthP, 0, 1, 0.8, 2.5); // Hair-thin back layers, robust front layers
+            strokeWeight(strokeW);
+            
+            // Base shadow-to-light gradient across the spatial plains
+            let baseR = map(depthP, 0, 1, 10, 80);
+            let baseG = map(depthP, 0, 1, 25, 150);
+            let baseB = map(depthP, 0, 1, 10, 35);
+            let alpha = map(depthP, 0, 1, 160, 255);
+            
+            // Density of the actual blades per layer! Back layers are ultra-dense, front are slightly spread out
+            let spacing = map(depthP, 0, 1, 2.0, 7.0);
+            
+            for (let x = -60; x < width + 60; x += spacing) { 
+                let nSeed = x * 1.5 + l * 1000; 
+                
+                // Add jitter to the x position so it physically shatters any uniform column/row grid effect
+                let actualX = x + map(noise(nSeed), 0, 1, -spacing, spacing);
+                
+                // Micro-color variations replicating individual blade biology
+                let rVal = baseR + map(noise(nSeed + 10), 0, 1, -15, 30);
+                let gVal = baseG + map(noise(nSeed + 20), 0, 1, -20, 45);
+                let bVal = baseB + map(noise(nSeed + 30), 0, 1, -10, 15);
+                stroke(rVal, gVal, bVal, alpha);
+                
+                // Height maps across both X spatial noise and Layer depth
+                // Tallest grasses are natively generated in the front
+                let hNoise = noise(actualX * 0.008, l * 0.5);
+                let baseHeight = height * 0.08;
+                let maxH = baseHeight + (l * height * 0.045);
+                let ht = map(hNoise, 0, 1, baseHeight * 0.5, maxH);
+                
+                // Staggered wind propagation (gusts physically hit the front layers slightly delayed)
+                let windStrength = noise(actualX * 0.003, windTime - l*0.05); 
+                // Wind strongly affects taller grass exponentially
+                let windBend = map(windStrength, 0, 1, -15, 60) * map(ht, 0, height*0.3, 0.4, 1.8);
+                
+                // Introduce severe biological droop (broken blades, heavy seed heads) exclusively to random mid/front blades
+                let droopX = 0;
+                let droopY = 0;
+                if (l > 3 && noise(nSeed * 3) > 0.8) {
+                    droopX = map(noise(nSeed * 4), 0, 1, 15, 60);
+                    droopY = map(noise(nSeed * 5), 0, 1, 5, 25);
+                    if (noise(nSeed * 6) > 0.5) droopX *= -1; // Randomly fall left or right
+                }
+                
+                beginShape();
+                vertex(actualX, height + 5); // anchor slightly beneath the canvas cut-off
+                
+                let cpY = height - (ht * 0.55);
+                let tipX = actualX + windBend + droopX;
+                let tipY = height - ht + droopY;
+                
+                quadraticVertex(actualX + (windBend * 0.3), cpY, tipX, tipY);
+                endShape();
+            }
         }
     }
     
