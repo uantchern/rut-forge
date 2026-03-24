@@ -409,80 +409,118 @@
             this.escapeDir = p5.Vector.fromAngle(angle); 
             
             this.color = color(90, 210, 255); // vibrant tiny blue bugs 
-            this.size = random(2.5, 4.5);
+            this.size = random(3.0, 5.0);
             
-            // Behavioral Machine States
+            // Voice-Flight Metaphor State Machine
             this.actionTimer = 0;
-            this.mode = 'HESITATE';
+            this.mode = 'HOVER';
             this.vel = createVector(0,0);
         }
         update() {
             this.actionTimer--;
             if (this.actionTimer <= 0) {
-                // Shift to a new randomized emotional state
+                // Voice-Flight Metaphor State Machine Profile (Flight vs Vocal Quality)
                 let r = random();
-                if (r < 0.15) {
-                    this.mode = 'REVERSE'; // shy, pulling back / reversing
-                    this.actionTimer = random(15, 45);
-                    this.vel = p5.Vector.mult(this.escapeDir, random(-1.5, -0.5));
-                } else if (r < 0.45) {
-                    this.mode = 'HESITATE'; // haltingly, stopping
+                if (r < 0.20) {
+                    this.mode = 'HOVER'; // Sustained hum/murmur. High frequency, low amplitude tension.
                     this.actionTimer = random(30, 80);
                     this.vel = createVector(0, 0);
-                } else if (r < 0.60) {
-                    this.mode = 'STUTTER'; // embarrassed trembling
-                    this.actionTimer = random(15, 35);
-                    this.vel = createVector(0, 0);
-                } else if (r < 0.80) {
-                    this.mode = 'CURIOUS'; // slow meandering sideways, exploring
+                } else if (r < 0.40) {
+                    this.mode = 'GLIDE'; // Steady held note. Smooth, resonant, legato.
                     this.actionTimer = random(40, 90);
-                    let wanderAngle = this.escapeDir.heading() + random(-PI/2, PI/2);
-                    this.vel = p5.Vector.fromAngle(wanderAngle).mult(random(0.3, 0.8));
+                    let wanderAngle = this.escapeDir.heading() + random(-PI/3, PI/3);
+                    this.vel = p5.Vector.fromAngle(wanderAngle).mult(random(0.5, 1.2));
+                } else if (r < 0.60) {
+                    this.mode = 'ZIG_ZAG'; // Breathless fragments, Staccato gasps.
+                    this.actionTimer = random(15, 35);
+                    let erraticAngle = random(TWO_PI);
+                    this.vel = p5.Vector.fromAngle(erraticAngle).mult(random(1.5, 3.5));
+                } else if (r < 0.75) {
+                    this.mode = 'TAKEOFF'; // Sibilant Fricative "shhh" / "f". Sudden tiny displacement.
+                    this.actionTimer = random(10, 20); // very short sudden exhale
+                    let dartAngle = this.escapeDir.heading() + random(-0.2, 0.2);
+                    this.vel = p5.Vector.fromAngle(dartAngle).mult(random(4, 7)); // huge air displacement speed
+                } else if (r < 0.90) {
+                    this.mode = 'SUNNING'; // Silent Vowel "ah". Static but full of potential energy.
+                    this.actionTimer = random(40, 80);
+                    this.vel = createVector(0, 0); 
                 } else {
-                    this.mode = 'DART'; // excitedly speeding up towards the edge
-                    this.actionTimer = random(12, 25);
-                    let dartAngle = this.escapeDir.heading() + random(-0.3, 0.3);
-                    this.vel = p5.Vector.fromAngle(dartAngle).mult(random(3, 8)); // very fast burst!
+                    this.mode = 'DESCENDING'; // A fading sigh, Decrescendo. Sinking.
+                    this.actionTimer = random(40, 70);
+                    this.vel = createVector(random(-0.5, 0.5), random(0.5, 1.5)); // sinking downward
                 }
             }
             
-            // Execute the physical translation of the current emotional state
-            if (this.mode === 'STUTTER') {
-                // Rapid frantic shaking perfectly locked in place
-                this.pos.x += random(-1.5, 1.5);
-                this.pos.y += random(-1.5, 1.5);
-            } else if (this.mode === 'HESITATE') {
-                // Almost perfectly still, merely breathing heavily
-                this.pos.x += random(-0.2, 0.2);
-                this.pos.y += random(-0.2, 0.2);
-            } else {
-                // Standard velocity displacement
+            // Execute Flight/Voice Physical Mechanics
+            let flutterX = 0;
+            let flutterY = 0;
+            
+            if (this.mode === 'HOVER') {
+                // High frequency, low amplitude tension (Monk's chant)
+                flutterX = map(noise(this.seed, frameCount * 0.4), 0, 1, -0.6, 0.6); // fast noise
+                flutterY = map(noise(this.seed + 100, frameCount * 0.4), 0, 1, -0.6, 0.6);
+            } else if (this.mode === 'ZIG_ZAG') {
                 this.pos.add(this.vel);
-                // Severe kinetic friction ensures excitedly speeding up "Darts" slow aggressively to a halt
-                if (this.mode === 'DART') this.vel.mult(0.85); 
+                // Wildly jump directions natively simulating breathless staccato
+                if (frameCount % 6 === 0) this.vel.rotate(random(-PI/2, PI/2));
+            } else if (this.mode === 'TAKEOFF') {
+                // Sudden loud exhale displacement losing momentum rapidly
+                this.pos.add(this.vel);
+                this.vel.mult(0.82); // sharp heavy friction
+            } else if (this.mode === 'GLIDE') {
+                // Legato moving smoothly
+                this.pos.add(this.vel);
+                // Low frequency, soft drifting wave overlay
+                flutterX = map(sin(frameCount * 0.05 + this.seed), -1, 1, -0.3, 0.3);
+                flutterY = map(cos(frameCount * 0.05 + this.seed), -1, 1, -0.3, 0.3);
+            } else if (this.mode === 'DESCENDING') {
+                this.pos.add(this.vel);
+                this.vel.y += 0.04; // faint gravity pull sighing downward
+            } else if (this.mode === 'SUNNING') {
+                // Almost perfectly static, just resting
+                flutterX = map(noise(this.seed, frameCount * 0.01), 0, 1, -0.1, 0.1); 
+                flutterY = map(noise(this.seed + 100, frameCount * 0.01), 0, 1, -0.1, 0.1);
             }
             
-            // Ambient organic flutter overlay guaranteeing it never entirely looks mechanical
-            let flutterX = map(noise(this.seed, frameCount * 0.1), 0, 1, -0.6, 0.6);
-            let flutterY = map(noise(this.seed + 100, frameCount * 0.1), 0, 1, -0.6, 0.6);
             this.pos.x += flutterX;
             this.pos.y += flutterY;
             
-            // Add a very subtle, inescapable ambient draft pushing them towards the edge eventually
-            // so they don't get trapped eternally hesitating on the screen
-            this.pos.add(p5.Vector.mult(this.escapeDir, 0.25));
+            // Core ambient draft eventually pulling them away to escape the page natively
+            if (this.mode !== 'DESCENDING') {
+                this.pos.add(p5.Vector.mult(this.escapeDir, 0.15));
+            }
         }
         display() {
-            // Fast opaque object crossing a translucent canvas functionally burns
-            // an automatic flight trace trail directly into the page fading exquisitely slowly.
             noStroke();
+            
+            // If ZIG_ZAG (Staccato), explicitly skip drawing frames to create "breathless fragments" visually!
+            if (this.mode === 'ZIG_ZAG' && frameCount % 6 < 3) {
+                return; // Defy gravity visually, drawing distinctly separated notes
+            }
+            
+            // If DESCENDING (A fading sigh), shrink size to physically emulate decrescendo!
+            let currentSize = this.size;
+            if (this.mode === 'DESCENDING') {
+                // Action timer shrinks towards 0; shrink visual size accordingly
+                currentSize *= map(this.actionTimer, 70, 0, 1.0, 0.1, true); 
+            }
+            
             fill(this.color);
             push();
             translate(this.pos.x, this.pos.y);
             rotate(this.vel.heading());
-            // Wing flap optical illusion creates natural broken-line trail spacing
-            let wing = map(sin(frameCount * 0.3 + this.seed), -1, 1, 0.2, 1);
-            ellipse(0, 0, this.size, this.size * wing);
+            
+            // Wing Flaps: "Soft rhythmic pats", "Percussive whispers"
+            // Frequency of the visual wing displacement heavily dictates the audio metaphor!
+            let flapSpeed = 0.3; // Glide / Descending (Legato rhythms, sighs)
+            if (this.mode === 'HOVER') flapSpeed = 1.0; // Vibrate extreme high frequency
+            if (this.mode === 'ZIG_ZAG') flapSpeed = 0.6; // Breathless fragment tempo
+            if (this.mode === 'TAKEOFF') flapSpeed = 1.4; // Exhale, sudden violent blur
+            
+            let wing = map(sin(frameCount * flapSpeed + this.seed), -1, 1, 0.1, 1);
+            if (this.mode === 'SUNNING') wing = 1.0; // Static, wings spread wide, resonant continuous "ah"
+            
+            ellipse(0, 0, currentSize, currentSize * wing);
             pop();
         }
         isDead() {
