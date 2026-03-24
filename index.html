@@ -97,6 +97,7 @@
             // Seamlessly return to Void
             state = 'A';
             tapCount = 0;
+            bursts = []; // Wipes cleanly only after butterfly evaporates
           }
         }
       }
@@ -153,19 +154,17 @@
             this.collapseThreshold = random(0.55, 0.75);
             
             let numLines = Math.floor(random(40, 80)); // rich particle burst
-            let sides = (tapIndex % 3) + 3; // 3: Triangle, 4: Square, 5: Pentagon
             
-            // Intention: Form a different geometric shape per tap
+            // Intention: Form an organic pareidolia shape (rorschach abstract blob meaning)
+            let shapeSeed = random(1000);
+            let shapeVariance = random(0.5, 2.5); // dictates how extremely the blob stretches
+            
             for(let i = 0; i < numLines; i++) {
-                let side = Math.floor(random(sides));
-                let angleA = (side / sides) * TWO_PI;
-                let angleB = ((side + 1) / sides) * TWO_PI;
-                
-                let pA = p5.Vector.fromAngle(angleA).mult(this.shapeRadius);
-                let pB = p5.Vector.fromAngle(angleB).mult(this.shapeRadius);
-                
-                // Interpolate randomly along the polygon edge
-                let tOffset = p5.Vector.lerp(pA, pB, random());
+                let angle = random(TWO_PI);
+                let nVal = noise(cos(angle) + shapeSeed, sin(angle) + shapeSeed);
+                // Pareidolia radius mapping ensuring non-geometric fluidity
+                let r = this.shapeRadius * map(nVal, 0, 1, 0.2, shapeVariance);
+                let tOffset = p5.Vector.fromAngle(angle).mult(r);
                 
                 this.particles.push({
                     curr: createVector(x, y),
@@ -198,15 +197,17 @@
                     p.curr.x += tx;
                     p.curr.y += ty;
                 } else if (progress < 1.0) {
-                    // Dissolve / Collapse 
+                    // Dissolve / Fizzle out gently WITHOUT gravity to prevent giant grey smear artifacts
                     if (!p.dissolved) {
                         p.dissolved = true;
-                        p.vx = random(-2, 2);
-                        p.vy = random(-1, 3); // Fall and scatter abruptly
+                        p.vx = random(-1.5, 1.5);
+                        p.vy = random(-1.5, 1.5); 
                     }
-                    p.curr.x += p.vx + random(-0.5, 0.5);
-                    p.curr.y += p.vy + random(-0.5, 0.5);
-                    p.vy += 0.05; // mild gravity
+                    p.curr.x += p.vx;
+                    p.curr.y += p.vy;
+                    // Friction to naturally halt them completely
+                    p.vx *= 0.85;
+                    p.vy *= 0.85;
                 } else {
                     // Ghostly faintt: freezing visually permanently instead of wiping
                     p.vx = 0;
@@ -240,14 +241,13 @@
         // Sweat droplets directly off the "lines of the past" (the faint ghosts)
         for (let b of bursts) {
             for (let p of b.particles) {
-                // Skips 50% randomly to thin it out so it coalesces cleanly
-                if (random() > 0.5) continue;
+                // Keep the original ghosts haunting on canvas; only spawn droplets atop 40% of them
+                if (random() > 0.4) continue;
                 droplets.push(new Droplet(p.curr.x, p.curr.y, cx, cy));
             }
         }
         
-        // Wipe old bursts as they are now reincarnated into droplets
-        bursts = [];
+        // Critically DO NOT wipe `bursts` here. Let them persistently haunt the background!
     }
     
     class Droplet {
@@ -256,7 +256,10 @@
             this.curr = createVector(sx, sy); // starts EXACTLY where the ghost trace froze
             this.seed = random(1000);
             this.alpha = random(80, 220);
-            this.size = random(2, 4);
+            this.size = random(1, 2);
+            
+            // "Sweating" delay: it must visually grow ON the ghost trace before sliding off
+            this.sweatTimer = random(20, 150);
             
             // Generate coordinates along a mathematical Parametric Butterfly Curve
             let t = random(0, 12 * PI);
@@ -270,14 +273,21 @@
             this.vp = createVector(0,0);
         }
         update() {
+            if (this.sweatTimer > 0) {
+                // Visually "sweating" / expanding from the ghost trace without moving yet
+                this.sweatTimer--;
+                this.size = map(this.sweatTimer, 150, 0, 1.5, 4.5);
+                return; // Anchor to the trace until sweat completes
+            }
+            
             // Fluidly move towards butterfly shape parametric targets
             let breath = map(sin(frameCount * 0.03 + this.seed), -1, 1, 0.9, 1.1);
             let targetOffset = p5.Vector.mult(this.tOffset, breath);
             let target = p5.Vector.add(this.origin, targetOffset);
             
-            // Starts slow and speeds up beautifully
+            // Starts slow and speeds up beautifully as it detaches and slides off
             let dist = p5.Vector.dist(this.curr, target);
-            let force = constrain(map(dist, 0, 300, 0.01, 0.05), 0.01, 0.05);
+            let force = constrain(map(dist, 0, 300, 0.01, 0.08), 0.01, 0.08);
             
             this.curr.x = lerp(this.curr.x, target.x, force);
             this.curr.y = lerp(this.curr.y, target.y, force);
