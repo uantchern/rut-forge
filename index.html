@@ -113,21 +113,21 @@
       
       // State D: The Water Butterfly (Coalescence & Evaporation)
       if (state === 'D') {
-        dTimer += 0.5; // Slow down everything by 50% more!
+        dTimer += 2.5; // Cinematically sped up 500% to prevent the 20-second engine lockout feeling 'frozen'
         if (dTimer < 600) {
           // Drops "sweat" from past traces coalescing into a shape
           for (let d of droplets) {
             d.update();
             d.display();
           }
-        } else if (dTimer === 600 || dTimer === 600.5) {
+        } else if (dTimer === 600 || dTimer === 602.5) {
           // Evaporation trigger
           if (dTimer === 600) {
             for (let d of droplets) {
               d.triggerEvaporate();
             }
           }
-        } else if (dTimer > 600.5) {
+        } else if (dTimer > 602.5) {
           // Visualizing vapor evaporation
           for (let i = droplets.length - 1; i >= 0; i--) {
             let d = droplets[i];
@@ -481,7 +481,7 @@
             this.size = random(2.0, 3.5); // rigid robust dots for pure visual clarity
             
             // "Sweating" delay: it must visually grow ON the ghost trace before sliding off
-            this.sweatTimer = random(50, 200); // Delayed significantly longer to watch Sweat build heavily
+            this.sweatTimer = random(10, 40); // Sped up massively to eliminate 15-second lag
             
             // Pure evenly-spaced placement along Temple's Parametric Butterfly Curve
             let t = tVal; 
