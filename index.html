@@ -39,6 +39,7 @@
     let absoluteTapCount = 0; // Tracks across the entire session to drive physical state colors
     let dTimer = 0;
     let dCenter;
+    let bgImage = null; // Asynchronously loaded Ghibli landscape
     
     // Dynamically returns the current thematic palette based cleanly on the 15-click loop
     function getCurrentThemeColor() {
@@ -57,6 +58,11 @@
     function setup() {
       createCanvas(windowWidth, windowHeight);
       
+      // Asynchronously fetch the custom Ghibli landscape without breaking the engine loader
+      loadImage('background.jpg', img => {
+          bgImage = img;
+      });
+      
       // Initialize Golden floating magic spores (Spirited Away style)
       for (let i = 0; i < 120; i++) { 
         stars.push(new Star());
@@ -69,15 +75,41 @@
     }
     
     function draw() {
-      // High-performance vertical linear gradient for 2D atmospheric perspective (Zenith to Forest Edge)
-      let ctx = drawingContext;
-      let grad = ctx.createLinearGradient(0, 0, 0, height);
-      grad.addColorStop(0, '#1c5aa8');    // Deep realistic polarized sky blue
-      grad.addColorStop(0.4, '#76ade3');  // Mid sky gradient
-      grad.addColorStop(0.8, '#dceaf2');  // Ultra-realistic atmospheric white-blue fading horizon
-      grad.addColorStop(1, '#a8c797');    // Muted realistic distant ground fusion
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
+      if (bgImage) {
+          // Responsive "CSS Cover" style rendering for the background landscape
+          let aspect = bgImage.width / bgImage.height;
+          let screenAspect = width / height;
+          let drawW = width;
+          let drawH = height;
+          let dx = 0;
+          let dy = 0;
+          
+          if (screenAspect > aspect) {
+              drawH = width / aspect;
+              dy = (height - drawH) / 2;
+          } else {
+              drawW = height * aspect;
+              dx = (width - drawW) / 2;
+          }
+          
+          // Render the painted world!
+          image(bgImage, dx, dy, drawW, drawH);
+          
+          // Apply a very slight atmospheric haze over the image so the foreground pops perfectly
+          fill(240, 245, 238, 40);
+          rect(0, 0, width, height);
+          
+      } else {
+          // High-performance vertical linear gradient for 2D atmospheric perspective (Zenith to Forest Edge)
+          let ctx = drawingContext;
+          let grad = ctx.createLinearGradient(0, 0, 0, height);
+          grad.addColorStop(0, '#1c5aa8');    // Deep realistic polarized sky blue
+          grad.addColorStop(0.4, '#76ade3');  // Mid sky gradient
+          grad.addColorStop(0.8, '#dceaf2');  // Ultra-realistic atmospheric white-blue fading horizon
+          grad.addColorStop(1, '#a8c797');    // Muted realistic distant ground fusion
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, width, height);
+      }
       
       // State A: Summer Motes background drift & Clouds
       for (let c of clouds) {
