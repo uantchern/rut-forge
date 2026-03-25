@@ -149,20 +149,17 @@
     }
     
     function mousePressed() {
-      if (state === 'D') return; // lockout interactions during cinematic finale
+      // Cleanly wipe the slate exactly on the 16th interact to immediately spin up the new 15-click Color theme loop
+      if (tapCount === 15) {
+         tapCount = 0;
+         bursts = []; 
+      }
       
       tapCount++;
-      absoluteTapCount++; // Never resets, continuously tracking absolute lifetime clicks
+      absoluteTapCount++; // Continuously drives the palette evolution uniformly
       
-      if (tapCount < 15) {
-        // The morphing evolution natively builds uniformly across 15 clicks!
-        bursts.push(new Burst(mouseX, mouseY, tapCount));
-      } else if (tapCount === 15) {
-        // State D: The final magical Coalescence Trigger structurally capped exactly on the 15th tap of the cycle
-        state = 'D';
-        dTimer = 0;
-        initButterfly(mouseX, mouseY);
-      }
+      // Explicitly pushing the Burst physics on EVERY single tap! No cinematic engine locks.
+      bursts.push(new Burst(mouseX, mouseY, tapCount));
     }
     
     function windowResized() {
@@ -341,26 +338,30 @@
                 let tx = sin(ang) * p * scaleR;
                 let ty = -cos(ang) * p * scaleR;
                 
-                // The explicit user mapping: 1-5 vague contour, 6-10 half-formed, 11-14 crystalline bounds
-                if (tapIndex <= 5) {
-                    // Vague heavy pareidolia scrambling visually disguising the shape
+                let voicelessProb = 0.0;
+                
+                // Formulate the Butterfly Parametric Curve seamlessly but *exclusively* on the 3 user-stated checkpoint taps!
+                if (tapIndex === 5) {
+                    // Vague Heavy shape (1st Appearance)
                     tx += random(-140, 140);
                     ty += random(-140, 140);
-                } else if (tapIndex <= 10) {
-                    // 50% formed, visibly anchoring tighter pulling back toward the parametric curves
-                    tx += random(-40, 40);
-                    ty += random(-40, 40);
-                } else {
-                    // 100% formed! Crystalline exact param-equation traces from click 11 continuously through 14
+                    voicelessProb = 0.50; // 50% trapped suppressing the bounds
+                } else if (tapIndex === 10) {
+                    // 50% Formed (2nd Appearance)
+                    tx += random(-35, 35);
+                    ty += random(-35, 35);
+                    voicelessProb = 0.20; // 20% trapped inside the core
+                } else if (tapIndex === 15) {
+                    // 100% Formed! (3rd Appearance)
                     tx += random(-5, 5);
                     ty += random(-5, 5);
+                    voicelessProb = 0.0; // 100% leap sequentially building the absolute geometry
+                } else {
+                    // Non-milestone clicks actively refuse to form the shape! Pure biological ambient chaos.
+                    tx = random(-140, 140);
+                    ty = random(-140, 140);
+                    voicelessProb = 0.85; // heavily suppressed dots simulating failed structural flight attempts
                 }
-                
-                // Voice constraint officially evolves! Fear gradually turns into cohesive shape 
-                let voicelessProb = 0;
-                if (tapIndex <= 5) voicelessProb = 0.75; // 75% of initial clicks are too fearful to form the shape
-                else if (tapIndex <= 10) voicelessProb = 0.30; // 30% are trapped natively
-                else voicelessProb = 0.0; // 100% boldly leap sequentially building the perfect pure geometric butterfly!
                 
                 let isVoiceless = random() < voicelessProb;
                 
