@@ -134,7 +134,7 @@
               d.homeTarget = createVector(mouseX + tx, mouseY + ty);
               d.mode = 'RETURN';
               d.timer = 0; // Starts the structural form countdown timer
-              d.lerpSpeed = random(0.008, 0.035); // Very slowly drift inwards
+              d.lerpSpeed = random(0.004, 0.0175); // Half sped natively drifting seamlessly inward
               
               // Refreshing color palette explicitly just for the 10th-click butterfly formation
               if (tapCount === 10) {
@@ -244,10 +244,10 @@
         this.size = random(3.0, 7.0); // Bigger, softer floating magic spores/motes
       }
       update() {
-        // Drifting golden motes slowly rising in the updrafts (Slowed 20%)
-        this.nx += 0.004;
-        this.pos.x += map(noise(this.nx, frameCount * 0.01), 0, 1, -0.48, 0.48);
-        this.pos.y -= random(0.24, 0.8); // Rising physics explicitly cut by exactly 20%
+        // Drifting golden motes slowly rising in the updrafts (Slowed another 50%)
+        this.nx += 0.002;
+        this.pos.x += map(noise(this.nx, frameCount * 0.01), 0, 1, -0.24, 0.24);
+        this.pos.y -= random(0.12, 0.4); // Rising physics explicitly halved
         if (this.pos.y < 0) this.pos.y = height + 10;
       }
       display() {
@@ -283,7 +283,7 @@
             this.timer = 0;
             this.size = random(1.5, 9.0); // Dots scatter globally in huge variety of random sizes
             
-            this.lerpSpeed = random(0.005, 0.025); // Extremely slowly drifting outwards
+            this.lerpSpeed = random(0.0025, 0.0125); // Sluggishly drifting outwards explicitly halved natively
             
             // Logic mapping the exact specified dropout probability bounds per distinct step block
             this.survivor = false;
@@ -315,8 +315,8 @@
             } 
             else if (this.mode === 'WAIT') {
                 // Suspended animation sitting quietly at the canvas edges waiting for dots or commands
-                this.curr.x += random(-0.3, 0.3); 
-                this.curr.y += random(-0.3, 0.3);
+                this.curr.x += random(-0.15, 0.15); // Shiver halved cleanly
+                this.curr.y += random(-0.15, 0.15);
             }
             else if (this.mode === 'RETURN') {
                 // Swooping cleanly inward from edge boundaries directly back to the physical cursor geometry limits
@@ -324,7 +324,7 @@
                 this.curr.y = lerp(this.curr.y, this.homeTarget.y, this.lerpSpeed);
                 
                 // Keep track of how long the shape has been geometrically held up visually
-                this.timer += 0.01; 
+                this.timer += 0.005; // Sped inherently held explicitly twice as visually long!
                 
                 // Trigger natural dissolve or fluttering exit after ~1.5 seconds of holding structural bounds
                 if (this.timer > 1.2) { 
@@ -337,15 +337,15 @@
             }
             else if (this.mode === 'FLUTTER') {
                 // Graceful sweeping wing-beats visually drifting upwards
-                this.curr.x += map(noise(this.nx, frameCount * 0.05), 0, 1, -2.5, 2.5);
-                this.curr.y -= random(0.5, 2.5); 
-                this.nx += 0.1;
-                this.alpha -= 0.8; // beautiful extended dissolve
+                this.curr.x += map(noise(this.nx, frameCount * 0.05), 0, 1, -1.25, 1.25);
+                this.curr.y -= random(0.25, 1.25); // Rising gravity inherently halved
+                this.nx += 0.05;
+                this.alpha -= 0.4; // beautiful extended dissolve explicitly dragged linearly
             }
             else if (this.mode === 'DISSOLVE') {
-                this.alpha -= 1.5; // Natural localized linear evaporation
-                this.curr.x += random(-0.2, 0.2);
-                this.curr.y += random(-0.2, 0.2);
+                this.alpha -= 0.75; // Natural localized linear evaporation completely halved natively
+                this.curr.x += random(-0.1, 0.1);
+                this.curr.y += random(-0.1, 0.1);
             }
         }
         
