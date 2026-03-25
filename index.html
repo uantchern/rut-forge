@@ -180,7 +180,7 @@
           }
       } else {
           // Clicks 1-4, 6-9: Chaos interaction!
-          let spawnCount = Math.floor(random(130, 200));
+          let spawnCount = Math.floor(random(390, 600)); // Tripled natively mapping requirement organically
           for (let i = 0; i < spawnCount; i++) {
               globalDots.push(new Dot(mouseX, mouseY, tapCount));
           }
@@ -321,6 +321,7 @@
             
             this.seed = random(1000);
             this.nx = random(100);
+            this.edgeBuffer = random(5, 120); // Organic varied stopping points shattering the hard straight line artifact seamlessly
         }
         
         update() {
@@ -328,11 +329,12 @@
                 this.curr.x = lerp(this.curr.x, this.fleeTarget.x, this.lerpSpeed);
                 this.curr.y = lerp(this.curr.y, this.fleeTarget.y, this.lerpSpeed);
                 
-                // Edge-reached detection
-                let isAtEdge = this.curr.x < 5 || this.curr.x > width - 5 || this.curr.y < 5 || this.curr.y > height - 5;
+                // Edge-reached detection dynamically mapping varied organic boundaries mimicking atmospheric borders
+                let isAtEdge = this.curr.x < this.edgeBuffer || this.curr.x > width - this.edgeBuffer || this.curr.y < this.edgeBuffer || this.curr.y > height - this.edgeBuffer;
                 if (isAtEdge) {
                     if (this.survivor) {
                         this.mode = 'WAIT';
+                        this.waitAnchor = this.curr.copy(); // Record exact atmospheric entry point to tether the biological swarming!
                     } else {
                         // Dot officially "disappears over the edge"
                         this.alpha -= 5; // Severely slowed localized dissolve cleanly wrapping past off-screen
@@ -340,9 +342,15 @@
                 }
             } 
             else if (this.mode === 'WAIT') {
-                // Suspended animation sitting quietly at the canvas edges waiting for dots or commands
-                this.curr.x += random(-0.07, 0.07); // Shiver halved cleanly AGAIN
-                this.curr.y += random(-0.07, 0.07);
+                // Organic eager anticipating swarm! They jitter visibly like a living hive!
+                let wanderX = map(noise(this.nx, frameCount * 0.03), 0, 1, -2, 2);
+                let wanderY = map(noise(this.nx + 100, frameCount * 0.03), 0, 1, -2, 2);
+                this.curr.x += wanderX;
+                this.curr.y += wanderY;
+                
+                // Softly tether them tightly to their exact edge collision point so they don't migrate back into the middle!
+                this.curr.x = lerp(this.curr.x, this.waitAnchor.x, 0.05);
+                this.curr.y = lerp(this.curr.y, this.waitAnchor.y, 0.05);
             }
             else if (this.mode === 'RETURN') {
                 // Swooping cleanly inward from edge boundaries directly back to the physical cursor geometry limits
