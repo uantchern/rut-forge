@@ -134,11 +134,22 @@
               d.homeTarget = createVector(mouseX + tx, mouseY + ty);
               d.mode = 'RETURN';
               d.timer = 0; // Starts the structural form countdown timer
-              d.lerpSpeed = random(0.04, 0.1); 
+              d.lerpSpeed = random(0.008, 0.035); // Very slowly drift inwards
               
               // Refreshing color palette explicitly just for the 10th-click butterfly formation
               if (tapCount === 10) {
-                  d.color = getCurrentThemeColor(); 
+                  // "multi colourful butterfly"
+                  let vibrantColors = [
+                      color(255, 50, 50),   // Primary Red
+                      color(255, 150, 40),  // Vivid Orange
+                      color(255, 230, 40),  // Bright Yellow
+                      color(40, 220, 100),  // Spring Green
+                      color(40, 160, 255),  // Sky Blue
+                      color(150, 60, 255),  // Deep Purple
+                      color(255, 80, 200),  // Hot Pink
+                      color(255, 255, 255)  // Pure White
+                  ];
+                  d.color = random(vibrantColors); 
               }
           }
       } else {
@@ -270,9 +281,9 @@
             this.alpha = 255;
             this.color = getCurrentThemeColor();
             this.timer = 0;
-            this.size = random(3.0, 5.5);
+            this.size = random(1.5, 9.0); // Dots scatter globally in huge variety of random sizes
             
-            this.lerpSpeed = random(0.04, 0.12); // High velocity explosive scaling
+            this.lerpSpeed = random(0.005, 0.025); // Extremely slowly drifting outwards
             
             // Logic mapping the exact specified dropout probability bounds per distinct step block
             this.survivor = false;
@@ -298,7 +309,7 @@
                         this.mode = 'WAIT';
                     } else {
                         // Dot officially "disappears over the edge"
-                        this.alpha -= 15; // Extremely rapid localized dissolve simulation to emulate clearing the screen entirely
+                        this.alpha -= 5; // Severely slowed localized dissolve cleanly wrapping past off-screen
                     }
                 }
             } 
