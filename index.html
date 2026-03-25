@@ -51,7 +51,6 @@
     let bursts = [];
     let droplets = [];
     let tinyButterflies = []; // Persistent tracking for disappearing voices
-    let clouds = []; // Massive Ghibli volumetric clouds
     let tapCount = 0;
     let absoluteTapCount = 0; // Tracks across the entire session to drive physical state colors
     let dTimer = 0;
@@ -78,11 +77,6 @@
       for (let i = 0; i < 120; i++) { 
         stars.push(new Star());
       }
-      
-      // Initialize massive drifting Ghibli cumulonimbus clouds
-      for (let i = 0; i < 5; i++) {
-        clouds.push(new Cloud());
-      }
     }
     
     function draw() {
@@ -95,12 +89,7 @@
       fill(240, 245, 238, 40);
       rect(0, 0, width, height);
       
-      // State A: Summer Motes background drift & Clouds
-      for (let c of clouds) {
-        c.update();
-        c.display();
-      }
-      
+      // State A: Summer Motes background drift
       for (let s of stars) {
         s.update();
         s.display();
@@ -280,54 +269,6 @@
       }
     }
     
-    class Cloud {
-        constructor() {
-            this.pos = createVector(random(width), random(height * 0.05, height * 0.35));
-            this.size = random(200, 500); // Massive epic Ghibli columns
-            this.speed = random(0.1, 0.35); // Slow majestic drift
-            this.opacity = random(220, 255); // Solid painted volumes
-            
-            // Rebuild cloud as a structural painted blob composed of crisp overlapping discs
-            this.clumps = [];
-            let numClumps = Math.floor(random(8, 16));
-            for (let i = 0; i < numClumps; i++) {
-                let rLocal = random(this.size * 0.25, this.size * 0.55);
-                let ang = random(TWO_PI);
-                this.clumps.push({
-                   x: cos(ang) * random(0, this.size * 0.45) * 1.5, // Wider horizontally 
-                   y: sin(ang) * random(0, this.size * 0.25) - (rLocal * 0.2), // Biased upward
-                   r: rLocal
-                });
-            }
-        }
-        update() {
-            this.pos.x += this.speed; // Drift cleanly downwind (rightwards)
-            if (this.pos.x - this.size > width) {
-                // Respawn cleanly upwind upon exiting right screen bounds
-                this.pos.x = -this.size;
-                this.pos.y = random(height * 0.05, height * 0.35);
-            }
-        }
-        display() {
-            noStroke();
-            push();
-            translate(this.pos.x, this.pos.y);
-            let ctx = drawingContext;
-            
-            // Hyper-realistic volumetric clouds using overlapping incredibly soft radial gradients
-            for (let c of this.clumps) {
-                let rGradient = ctx.createRadialGradient(c.x, c.y - c.r*0.1, 0, c.x, c.y, c.r);
-                rGradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity/255 * 0.95})`); // Bright white dense sunlit core
-                rGradient.addColorStop(0.5, `rgba(240, 245, 250, ${this.opacity/255 * 0.6})`); // Mid soft volume
-                rGradient.addColorStop(1, `rgba(200, 210, 220, 0)`); // Dissipating perfectly to atmospheric edges
-                
-                ctx.fillStyle = rGradient;
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, c.r, 0, TWO_PI);
-                ctx.fill();
-            }
-            pop();
-        }
     }
     
     class Burst {
