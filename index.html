@@ -45,16 +45,12 @@
   
   <script>
     // System State Architecture
-    let state = 'A'; // A: Void, B: Stutter, D: Water Butterfly
+    let state = 'A'; // A: Void
     
     let stars = [];
-    let bursts = [];
-    let droplets = [];
-    let tinyButterflies = []; // Persistent tracking for disappearing voices
+    let globalDots = []; // Persistent tracking system storing state metadata across iterative clicks!
     let tapCount = 0;
     let absoluteTapCount = 0; // Tracks across the entire session to drive physical state colors
-    let dTimer = 0;
-    let dCenter;
     
     // Dynamically returns the current thematic palette based cleanly on the 10-click loop
     function getCurrentThemeColor() {
@@ -95,73 +91,63 @@
         s.display();
       }
       
-      // State B: The Stutter (Bursts of points)
-      for (let i = bursts.length - 1; i >= 0; i--) {
-        let b = bursts[i];
-        b.update();
-        b.display();
-      }
-      
-      // The Small Voices (Tiny blue butterflies fleeing over the edges)
-      for (let i = tinyButterflies.length - 1; i >= 0; i--) {
-        let tb = tinyButterflies[i];
-        tb.update();
-        tb.display();
-        // Immediately kills flight trails when cinematic State D begins or when entirely off-screen
-        if (tb.isDead() || state === 'D') {
-            tinyButterflies.splice(i, 1);
-        }
-      }
-      
-      // State D: The Water Butterfly (Coalescence & Evaporation)
-      if (state === 'D') {
-        dTimer += 2.5; // Cinematically sped up 500% to prevent the 20-second engine lockout feeling 'frozen'
-        if (dTimer < 600) {
-          // Drops "sweat" from past traces coalescing into a shape
-          for (let d of droplets) {
-            d.update();
-            d.display();
-          }
-        } else if (dTimer === 600 || dTimer === 602.5) {
-          // Evaporation trigger
-          if (dTimer === 600) {
-            for (let d of droplets) {
-              d.triggerEvaporate();
-            }
-          }
-        } else if (dTimer > 602.5) {
-          // Visualizing vapor evaporation
-          for (let i = droplets.length - 1; i >= 0; i--) {
-            let d = droplets[i];
-            d.updateEvaporate();
-            d.display();
-            if (d.alpha <= 0) {
-              droplets.splice(i, 1);
-            }
-          }
-          
-          if (droplets.length === 0) {
-            // Seamlessly return to Void
-            state = 'A';
-            tapCount = 0;
-            bursts = []; // Wipes cleanly only after butterfly evaporates
-          }
+      // The Unified Particle State System!
+      for (let i = globalDots.length - 1; i >= 0; i--) {
+        let d = globalDots[i];
+        d.update();
+        d.display();
+        if (d.alpha <= 0) {
+            globalDots.splice(i, 1);
         }
       }
     }
     
     function mousePressed() {
-      // Cleanly wipe the slate exactly on the 11th interact to immediately spin up the new 10-click Color theme loop
       if (tapCount === 10) {
-         tapCount = 0;
-         bursts = []; 
+         tapCount = 0; 
+         // System natively wipes loop integers but preserves dots actively fading in the air!
       }
       
       tapCount++;
       absoluteTapCount++; // Continuously drives the palette evolution uniformly
       
-      // Explicitly pushing the Burst physics on EVERY single tap! No cinematic engine locks.
-      bursts.push(new Burst(mouseX, mouseY, tapCount));
+      if (tapCount === 5 || tapCount === 10) {
+          // Command ALL dots natively waiting at the edges to rush inwards toward the cursor
+          let scaleR = min(width, height) / 10.0;
+          let activeDots = globalDots.filter(d => d.mode === 'WAIT');
+          
+          for (let i = 0; i < activeDots.length; i++) {
+              let d = activeDots[i];
+              let tVal = (i / activeDots.length) * 12 * PI;
+              let e = 2.71828;
+              let s = pow(sin(tVal/12), 5);
+              let tx = sin(tVal) * (pow(e, cos(tVal)) - 2*cos(4*tVal) - s) * scaleR;
+              let ty = -cos(tVal) * (pow(e, cos(tVal)) - 2*cos(4*tVal) - s) * scaleR;
+              
+              if (tapCount === 5) {
+                 // 50% formed, noise injected to scramble visually into a vaguer form
+                 tx += random(-45, 45);
+                 ty += random(-45, 45);
+              }
+              // tapCount 10 is perfectly cleanly formed, no added noise geometrically
+              
+              d.homeTarget = createVector(mouseX + tx, mouseY + ty);
+              d.mode = 'RETURN';
+              d.timer = 0; // Starts the structural form countdown timer
+              d.lerpSpeed = random(0.04, 0.1); 
+              
+              // Refreshing color palette explicitly just for the 10th-click butterfly formation
+              if (tapCount === 10) {
+                  d.color = getCurrentThemeColor(); 
+              }
+          }
+      } else {
+          // Clicks 1-4, 6-9: Chaos interaction!
+          let spawnCount = Math.floor(random(130, 200));
+          for (let i = 0; i < spawnCount; i++) {
+              globalDots.push(new Dot(mouseX, mouseY, tapCount));
+          }
+      }
     }
     
     function windowResized() {
@@ -269,408 +255,93 @@
       }
     }
     
-    class Burst {
+    class Dot {
         constructor(x, y, tapIndex) {
             this.origin = createVector(x, y);
-            this.particles = [];
+            this.curr = createVector(x, y);
+            
+            // Explosive scatter physics outwards to the edges
+            let explodeAng = random(TWO_PI);
+            let explodeDist = Math.max(width, height) * 0.9;
+            this.fleeTarget = createVector(x + cos(explodeAng)*explodeDist, y + sin(explodeAng)*explodeDist);
+            this.homeTarget = null;
+            
+            this.mode = 'FLEE'; 
+            this.alpha = 255;
+            this.color = getCurrentThemeColor();
             this.timer = 0;
-            this.lifeTime = random(100, 150);
-            this.collapseThreshold = random(0.55, 0.75);
+            this.size = random(3.0, 5.5);
             
-            this.themeColor = getCurrentThemeColor(); // Inherit dynamically evolving color state
-            let numLines = Math.floor(random(120, 180)); // Greatly increased density to structurally paint the butterfly
-            let scaleR = min(width, height) / 10.0;
+            this.lerpSpeed = random(0.04, 0.12); // High velocity explosive scaling
             
-            for(let i = 0; i < numLines; i++) {
-                let ang = random(TWO_PI * 5); 
-                let e = 2.71828;
-                let p = pow(e, cos(ang)) - 2 * cos(4 * ang) - pow(sin(ang / 12), 5);
-                
-                // Base Butterfly Mathematical Tracing Coordinates mathematically scaled
-                let tx = sin(ang) * p * scaleR;
-                let ty = -cos(ang) * p * scaleR;
-                
-                let voicelessProb = 0.0;
-                let lerpSpd = random(0.0016, 0.016); // Mathematical exact 20% drag reduction
-                
-                // Formulate the Butterfly Parametric Curve seamlessly but *exclusively* on the 10-Click Checkpoints
-                if (tapIndex === 5) {
-                    // 50% Formed (1st Appearance)
-                    tx += random(-40, 40);
-                    ty += random(-40, 40);
-                    voicelessProb = 0.35; // 35% trapped, suppressing bounded limits simulating a stutter 
-                } else if (tapIndex === 10) {
-                    // 100% Formed! Crystalline Formulation (2nd Appearance)
-                    tx += random(-2, 2);
-                    ty += random(-2, 2);
-                    voicelessProb = 0.0; // 100% perfectly tracing exact geometric coordinates
-                } else {
-                    // Complete Biological Chaos! 
-                    // Violently explode across the whole screen rapidly accelerating into the edges
-                    let explodeAng = random(TWO_PI);
-                    let explodeDist = random(width * 0.45, width * 1.5);
-                    tx = cos(explodeAng) * explodeDist;
-                    ty = sin(explodeAng) * explodeDist;
-                    voicelessProb = 0.0; // Zero dots trapped. All instantly flee outward!
-                    lerpSpd = random(0.06, 0.16); // Massively accelerated individualized physical speed so they smash to the screen edges incredibly fast, leaving no trace
-                }
-                
-                let isVoiceless = random() < voicelessProb;
-                
-                let spawnR = random(0, 45); // circular radius physically destroying the previous square 90x90 grid bounds
-                let spawnA = random(TWO_PI);
-                
-                this.particles.push({
-                    curr: createVector(x + cos(spawnA)*spawnR, y + sin(spawnA)*spawnR), // Organic circular cluster
-                    tOffset: createVector(tx, ty),
-                    seed: random(1000),
-                    dissolved: false,
-                    isVoiceless: isVoiceless,
-                    vx: 0,
-                    vy: 0,
-                    alpha: 255,
-                    lerpSpeed: lerpSpd // Directly applies dynamic algorithmic speed boosts
-                });
-            }
-            this.spawnedButterflies = false; // logic lock for end-state triggers
-        }
-        update() {
-            this.timer += 0.08; // Exact mathematical 20% reduction algorithm
-            let progress = this.timer / this.lifeTime;
-            
-            for(let p of this.particles) {
-                if (progress < this.collapseThreshold) {
-                    if (p.isVoiceless) {
-                        // The 90% that are trapped in silence. They just shiver nervously packed in the core point.
-                        p.curr.x += random(-0.3, 0.3);
-                        p.curr.y += random(-0.3, 0.3);
-                        continue; // Bypass all outward expansion math entirely
-                    }
-                    
-                    // Stutter physics: the brave 10% trying desperately to form the intended meaning
-                    let target = p5.Vector.add(this.origin, p.tOffset);
-                    // Uses personalized lerp speeds so the blob scrambles into place instead of expanding together
-                    p.curr.x = lerp(p.curr.x, target.x, p.lerpSpeed);
-                    p.curr.y = lerp(p.curr.y, target.y, p.lerpSpeed);
-                    
-                    // Tremor noise reflecting the 'struggle'
-                    let intensity = map(progress, 0, this.collapseThreshold, 0.1, 1.5); // Tremor calmed severely
-                    let tx = map(noise(p.seed, frameCount * 0.1), 0, 1, -1, 1) * intensity;
-                    let ty = map(noise(p.seed + 50, frameCount * 0.1), 0, 1, -1, 1) * intensity;
-                    
-                    p.curr.x += tx;
-                    p.curr.y += ty;
-                } else if (progress < 1.0) {
-                    // Dissolve / Fizzle out gently WITHOUT gravity to prevent giant grey smear artifacts
-                    if (!p.dissolved) {
-                        p.dissolved = true;
-                        p.vx = random(-1.5, 1.5);
-                        p.vy = random(-1.5, 1.5); 
-                    }
-                    p.curr.x += p.vx;
-                    p.curr.y += p.vy;
-                    // Friction to naturally halt them completely
-                    p.vx *= 0.85;
-                    p.vy *= 0.85;
-                } else {
-                    // Ghostly faintt: freezing visually permanently instead of wiping
-                    p.vx = 0;
-                    p.vy = 0;
-                }
+            // Logic mapping the exact specified dropout probability bounds per distinct step block
+            this.survivor = false;
+            if (tapIndex <= 4) {
+                this.survivor = random() > 0.50; // 50% wait at edges
+            } else if (tapIndex >= 6 && tapIndex <= 9) {
+                this.survivor = random() > 0.20; // 80% wait at edges
             }
             
-            // Burst ends logic: representing attempts to say something fleeing outward
-            if (progress >= 1.0 && !this.spawnedButterflies) {
-                this.spawnedButterflies = true;
-                let numVoices = Math.floor(random(1, 4)); // Small disappearing voices
-                for(let i=0; i<numVoices; i++) {
-                    let ghostOrigin = random(this.particles);
-                    tinyButterflies.push(new TinyButterfly(ghostOrigin.curr.x, ghostOrigin.curr.y, this.themeColor));
-                }
-            }
-        }
-        display() {
-            let progress = this.timer / this.lifeTime;
-            
-            for(let p of this.particles) {
-                 // Dynamic alpha scaling. Explicitly retaining High-Contrast permanently so the ghosts
-                 // clearly display the structural evolution from vague clouds to the dense butterfly silhouettes.
-                 if (progress >= this.collapseThreshold && progress < 1.0) {
-                       p.alpha = map(progress, this.collapseThreshold, 1.0, 220, 180);
-                 } else if (progress >= 1.0) {
-                       p.alpha = 180; // Highly visible, vivid permanent ghost traces frozen in space
-                 } else {
-                       p.alpha = 240; // Extremely punchy, dense tracing while constructing the shape
-                 }
-
-                 
-                 noStroke();
-                 fill(red(this.themeColor), green(this.themeColor), blue(this.themeColor), p.alpha); // Dynamically evolving colors tracking the active cycle
-                 circle(p.curr.x, p.curr.y, random(3.0, 5.5)); // Specks larger and organically varied in structural scale
-            }
-        }
-    }
-    
-    function initButterfly(clickX, clickY) {
-        // Force the majestic butterfly to assemble perfectly centered on the screen
-        let cx = width / 2;
-        let cy = height / 2;
-        dCenter = createVector(cx, cy);
-        
-        let targetCount = 600; // incredibly dense point tracing to ensure a solid contiguous outline
-        let ghosts = [];
-        // Harvest every single ghostly survivor from the past attempts
-        for (let b of bursts) {
-            for (let p of b.particles) ghosts.push(p);
-        }
-        
-        let existingCount = ghosts.length;
-        let total = Math.max(targetCount, existingCount);
-        let i = 0;
-        
-        // Sweat droplets directly off the "lines of the past"
-        for (let g of ghosts) {
-            let tVal = (i / total) * 12 * PI; // perfectly distribute smoothly along the entire butterfly curve
-            droplets.push(new Droplet(g.curr.x, g.curr.y, cx, cy, tVal));
-            i++;
-        }
-        
-        // If the ghosts aren't dense enough to draw the solid butterfly, spawn extra droplets scattered wildly
-        // across the screen instead of a geometric box, fading them in organically to be vacuumed into the shape
-        while (i < targetCount) {
-            let tVal = (i / total) * 12 * PI;
-            let auxX = random(0, width);
-            let auxY = random(0, height);
-            let d = new Droplet(auxX, auxY, cx, cy, tVal);
-            d.alpha = 0; // Starts invisible
-            droplets.push(d);
-            i++;
-        }
-        
-        // Critically DO NOT wipe `bursts` here. Let them persistently haunt the background!
-    }
-    
-    class Droplet {
-        constructor(sx, sy, cx, cy, tVal) {
-            this.origin = createVector(cx, cy);
-            this.curr = createVector(sx, sy); // starts EXACTLY where the ghost trace froze
-            this.themeColor = getCurrentThemeColor(); // Unify the evaporation traces completely with the current color cycle
             this.seed = random(1000);
-            this.targetAlpha = random(80, 220);
-            this.alpha = this.targetAlpha; // default solid, overwritable
-            this.size = random(2.0, 3.5); // rigid robust dots for pure visual clarity
-            
-            // "Sweating" delay: it must visually grow ON the ghost trace before sliding off
-            this.sweatTimer = random(10, 40); // Sped up massively to eliminate 15-second lag
-            
-            // Pure evenly-spaced placement along Temple's Parametric Butterfly Curve
-            let t = tVal; 
-            let e = exp(cos(t));
-            let s = pow(sin(t/12), 5);
-            let x = sin(t) * (e - 2*cos(4*t) - s);
-            let y = -cos(t) * (e - 2*cos(4*t) - s); // flip upright intentionally negative
-            
-            // Dynamically macroscopic! Perfectly sizing the butterfly to fill standard viewing ratios on both mobile & desktop
-            let scaleFact = Math.min(windowWidth, windowHeight) / 9; 
-            this.tOffset = createVector(x * scaleFact, y * scaleFact);
-            this.vp = createVector(0,0);
+            this.nx = random(100);
         }
+        
         update() {
-            if (this.alpha < this.targetAlpha) {
-                this.alpha += 1.5; // graceful fade in for invisibly spawned extra drops
+            if (this.mode === 'FLEE') {
+                this.curr.x = lerp(this.curr.x, this.fleeTarget.x, this.lerpSpeed);
+                this.curr.y = lerp(this.curr.y, this.fleeTarget.y, this.lerpSpeed);
+                
+                // Edge-reached detection
+                let isAtEdge = this.curr.x < 5 || this.curr.x > width - 5 || this.curr.y < 5 || this.curr.y > height - 5;
+                if (isAtEdge) {
+                    if (this.survivor) {
+                        this.mode = 'WAIT';
+                    } else {
+                        // Dot officially "disappears over the edge"
+                        this.alpha -= 15; // Extremely rapid localized dissolve simulation to emulate clearing the screen entirely
+                    }
+                }
+            } 
+            else if (this.mode === 'WAIT') {
+                // Suspended animation sitting quietly at the canvas edges waiting for dots or commands
+                this.curr.x += random(-0.3, 0.3); 
+                this.curr.y += random(-0.3, 0.3);
             }
-            if (this.sweatTimer > 0) {
-                // Visually "sweating" / expanding from the ghost trace without moving yet
-                this.sweatTimer--;
-                this.size = map(this.sweatTimer, 200, 0, 0.5, 4.5, true);
-                return; // Anchor to the trace until sweat completes
+            else if (this.mode === 'RETURN') {
+                // Swooping cleanly inward from edge boundaries directly back to the physical cursor geometry limits
+                this.curr.x = lerp(this.curr.x, this.homeTarget.x, this.lerpSpeed);
+                this.curr.y = lerp(this.curr.y, this.homeTarget.y, this.lerpSpeed);
+                
+                // Keep track of how long the shape has been geometrically held up visually
+                this.timer += 0.01; 
+                
+                // Trigger natural dissolve or fluttering exit after ~1.5 seconds of holding structural bounds
+                if (this.timer > 1.2) { 
+                    if (tapCount === 10 || tapCount === 0) {
+                        this.mode = 'FLUTTER'; // "flutters away and dissolves" on step 10 specifically
+                    } else {
+                        this.mode = 'DISSOLVE'; // "slowly dissolves" generally
+                    }
+                }
             }
-            
-            // Synchronous breathing so the entire butterfly pulses firmly as one recognizable structural entity
-            let breath = map(sin(frameCount * 0.03), -1, 1, 0.95, 1.05); // removed this.seed
-            let targetOffset = p5.Vector.mult(this.tOffset, breath);
-            let target = p5.Vector.add(this.origin, targetOffset);
-            
-            // Starts slow and speeds up beautifully snapping explicitly into the tight structural bounds
-            let dist = p5.Vector.dist(this.curr, target);
-            let force = constrain(map(dist, 0, 300, 0.02, 0.12), 0.02, 0.12); // Greatly accelerated snapping constraints
-            
-            this.curr.x = lerp(this.curr.x, target.x, force);
-            this.curr.y = lerp(this.curr.y, target.y, force);
-            
-            // Taoist Fluidity non-resistant offset
-            this.curr.x += map(noise(this.seed, frameCount * 0.01), 0, 1, -1, 1);
-            this.curr.y += map(noise(this.seed + 200, frameCount * 0.01), 0, 1, -1, 1);
+            else if (this.mode === 'FLUTTER') {
+                // Graceful sweeping wing-beats visually drifting upwards
+                this.curr.x += map(noise(this.nx, frameCount * 0.05), 0, 1, -2.5, 2.5);
+                this.curr.y -= random(0.5, 2.5); 
+                this.nx += 0.1;
+                this.alpha -= 0.8; // beautiful extended dissolve
+            }
+            else if (this.mode === 'DISSOLVE') {
+                this.alpha -= 1.5; // Natural localized linear evaporation
+                this.curr.x += random(-0.2, 0.2);
+                this.curr.y += random(-0.2, 0.2);
+            }
         }
+        
         display() {
             noStroke();
-            fill(red(this.themeColor), green(this.themeColor), blue(this.themeColor), this.alpha); // Adhering purely to the absolute click cycle mapping
+            fill(red(this.color), green(this.color), blue(this.color), this.alpha);
             circle(this.curr.x, this.curr.y, this.size);
-        }
-        triggerEvaporate() {
-            // Initiate gentle phase transition from fluid to vapor
-            let angle = random(TWO_PI);
-            let force = random(0.2, 1.0); // much weaker scatter
-            this.vp = p5.Vector.fromAngle(angle).mult(force);
-            this.vp.y -= random(0.5, 1.5); // weak upward pull
-        }
-        updateEvaporate() {
-            this.curr.add(this.vp);
-            this.vp.y -= 0.015; // slow drift upward instead of rushing
-            this.curr.x += random(-0.2, 0.2); // softer drift
-            this.curr.y += random(-0.2, 0.2);
-            
-            this.alpha -= 0.6; // beautiful slow fade to nothing
-            this.size = lerp(this.size, 8, 0.01); // gracefully expand into thin mist
-        }
-    }
-
-    class TinyButterfly {
-        constructor(x, y, themeColor) {
-            this.pos = createVector(x, y);
-            this.seed = random(1000);
-            
-            // Summer wind predominantly blows rightward with the clouds, so their general escape follows it!
-            let targetAngle = random(-PI/2.5, PI/2.5); // Natively drifts rightward over time, occasionally upwards
-            this.escapeDir = p5.Vector.fromAngle(targetAngle); 
-            
-            this.color = themeColor || color(10, 80, 210); // Inherit the correct 25-click cycle color palette natively 
-            this.size = random(3.0, 5.0);
-            
-            // Behavioral Machine States
-            this.actionTimer = 0;
-            this.mode = 'HOVER';
-            this.vel = createVector(0,0);
-            
-            // Explicitly tracking flight path to render dashed lines instead of biological smears
-            this.history = []; 
-        }
-        update() {
-            this.actionTimer--;
-            if (this.actionTimer <= 0) {
-                // Voice-Flight Metaphor State Machine Profile (Flight vs Vocal Quality)
-                let r = random();
-                if (r < 0.20) {
-                    this.mode = 'HOVER'; // Sustained hum/murmur. High frequency, low amplitude tension.
-                    this.actionTimer = random(30, 80);
-                    this.vel = createVector(0, 0);
-                } else if (r < 0.40) {
-                    this.mode = 'GLIDE'; // Steady held note. Smooth, resonant, legato.
-                    this.actionTimer = random(40, 90);
-                    let wanderAngle = this.escapeDir.heading() + random(-PI/3, PI/3);
-                    this.vel = p5.Vector.fromAngle(wanderAngle).mult(random(0.5, 1.2));
-                } else if (r < 0.60) {
-                    this.mode = 'ZIG_ZAG'; // Breathless fragments, Staccato gasps.
-                    this.actionTimer = random(15, 35);
-                    let erraticAngle = random(TWO_PI);
-                    this.vel = p5.Vector.fromAngle(erraticAngle).mult(random(1.5, 3.5));
-                } else if (r < 0.75) {
-                    this.mode = 'TAKEOFF'; // Sibilant Fricative "shhh" / "f". Sudden tiny displacement.
-                    this.actionTimer = random(10, 20); // very short sudden exhale
-                    let dartAngle = this.escapeDir.heading() + random(-0.2, 0.2);
-                    this.vel = p5.Vector.fromAngle(dartAngle).mult(random(4, 7)); // huge air displacement speed
-                } else if (r < 0.90) {
-                    this.mode = 'SUNNING'; // Silent Vowel "ah". Static but full of potential energy.
-                    this.actionTimer = random(40, 80);
-                    this.vel = createVector(0, 0); 
-                } else {
-                    this.mode = 'DESCENDING'; // A fading sigh, Decrescendo. Sinking.
-                    this.actionTimer = random(40, 70);
-                    this.vel = createVector(random(-0.5, 0.5), random(0.5, 1.5)); // sinking downward
-                }
-            }
-            
-            // Execute Flight/Voice Physical Mechanics
-            let flutterX = 0;
-            let flutterY = 0;
-            
-            if (this.mode === 'HOVER') {
-                // High frequency, low amplitude tension (Monk's chant)
-                flutterX = map(noise(this.seed, frameCount * 0.4), 0, 1, -0.6, 0.6); // fast noise
-                flutterY = map(noise(this.seed + 100, frameCount * 0.4), 0, 1, -0.6, 0.6);
-            } else if (this.mode === 'ZIG_ZAG') {
-                this.pos.add(this.vel);
-                // Wildly jump directions natively simulating breathless staccato
-                if (frameCount % 6 === 0) this.vel.rotate(random(-PI/2, PI/2));
-            } else if (this.mode === 'TAKEOFF') {
-                // Sudden loud exhale displacement losing momentum rapidly
-                this.pos.add(this.vel);
-                this.vel.mult(0.82); // sharp heavy friction
-            } else if (this.mode === 'GLIDE') {
-                // Legato moving smoothly
-                this.pos.add(this.vel);
-                // Low frequency, soft drifting wave overlay
-                flutterX = map(sin(frameCount * 0.05 + this.seed), -1, 1, -0.3, 0.3);
-                flutterY = map(cos(frameCount * 0.05 + this.seed), -1, 1, -0.3, 0.3);
-            } else if (this.mode === 'DESCENDING') {
-                this.pos.add(this.vel);
-                this.vel.y += 0.04; // faint gravity pull sighing downward
-            } else if (this.mode === 'SUNNING') {
-                // Almost perfectly static, just resting
-                flutterX = map(noise(this.seed, frameCount * 0.01), 0, 1, -0.1, 0.1); 
-                flutterY = map(noise(this.seed + 100, frameCount * 0.01), 0, 1, -0.1, 0.1);
-            }
-            
-            this.pos.x += flutterX;
-            this.pos.y += flutterY;
-            
-            // Core ambient draft eventually pulling them away to escape the page natively
-            if (this.mode !== 'DESCENDING') {
-                this.pos.add(p5.Vector.mult(this.escapeDir, 0.15));
-            }
-            
-            // Push isolated exact coordinates occasionally to form a strict dotted flight map (not a continuous smear)
-            if (frameCount % 4 === 0) {
-                this.history.push(createVector(this.pos.x, this.pos.y));
-                if (this.history.length > 25) {
-                    this.history.shift(); // Trail drops off naturally after 25 coordinates
-                }
-            }
-        }
-        display() {
-            noStroke();
-            
-            // Draw the structural dashed trail explicitly so it never smears like a tadpole
-            for (let i = 0; i < this.history.length; i++) {
-                let h = this.history[i];
-                let trailAlpha = map(i, 0, this.history.length, 0, 150);
-                fill(red(this.color), green(this.color), blue(this.color), trailAlpha); // Dynamic theme history 
-                circle(h.x, h.y, 1.2); 
-            }
-            
-            // If ZIG_ZAG (Staccato), explicitly skip drawing frames to create "breathless fragments" visually!
-            if (this.mode === 'ZIG_ZAG' && frameCount % 6 < 3) {
-                return; // Defy gravity visually, drawing distinctly separated notes
-            }
-            
-            // If DESCENDING (A fading sigh), shrink size to physically emulate decrescendo!
-            let currentSize = this.size;
-            if (this.mode === 'DESCENDING') {
-                // Action timer shrinks towards 0; shrink visual size accordingly
-                currentSize *= map(this.actionTimer, 70, 0, 1.0, 0.1, true); 
-            }
-            
-            fill(this.color);
-            push();
-            translate(this.pos.x, this.pos.y);
-            rotate(this.vel.heading());
-            
-            // Wing Flaps: "Soft rhythmic pats", "Percussive whispers"
-            // Frequency of the visual wing displacement heavily dictates the audio metaphor!
-            let flapSpeed = 0.3; // Glide / Descending (Legato rhythms, sighs)
-            if (this.mode === 'HOVER') flapSpeed = 1.0; // Vibrate extreme high frequency
-            if (this.mode === 'ZIG_ZAG') flapSpeed = 0.6; // Breathless fragment tempo
-            if (this.mode === 'TAKEOFF') flapSpeed = 1.4; // Exhale, sudden violent blur
-            
-            let wing = map(sin(frameCount * flapSpeed + this.seed), -1, 1, 0.1, 1);
-            if (this.mode === 'SUNNING') wing = 1.0; // Static, wings spread wide, resonant continuous "ah"
-            
-            ellipse(0, 0, currentSize, currentSize * wing);
-            pop();
-        }
-        isDead() {
-            // Only killed explicitly when fully escaped beyond screen margins
-            return (this.pos.x < -100 || this.pos.x > width + 100 || this.pos.y < -100 || this.pos.y > height + 100);
         }
     }
   </script>
