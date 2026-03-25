@@ -247,10 +247,10 @@
         this.size = random(3.0, 7.0); // Bigger, softer floating magic spores/motes
       }
       update() {
-        // Drifting golden motes slowly rising in the updrafts
-        this.nx += 0.005;
-        this.pos.x += map(noise(this.nx, frameCount * 0.01), 0, 1, -0.6, 0.6);
-        this.pos.y -= random(0.3, 1.0); // Slowly rising
+        // Drifting golden motes slowly rising in the updrafts (Slowed 20%)
+        this.nx += 0.004;
+        this.pos.x += map(noise(this.nx, frameCount * 0.01), 0, 1, -0.48, 0.48);
+        this.pos.y -= random(0.24, 0.8); // Rising physics explicitly cut by exactly 20%
         if (this.pos.y < 0) this.pos.y = height + 10;
       }
       display() {
@@ -267,8 +267,6 @@
         ctx.arc(this.pos.x, this.pos.y, this.size * 3.5, 0, TWO_PI);
         ctx.fill();
       }
-    }
-    
     }
     
     class Burst {
@@ -331,13 +329,13 @@
                     vx: 0,
                     vy: 0,
                     alpha: 255,
-                    lerpSpeed: random(0.002, 0.02) // Halved AGAIN! Extra agonizingly slow movement
+                    lerpSpeed: random(0.0016, 0.016) // Mathematical exact 20% drag reduction
                 });
             }
             this.spawnedButterflies = false; // logic lock for end-state triggers
         }
         update() {
-            this.timer += 0.1; // Slowed another 100%. Agonizingly slow meaning formation
+            this.timer += 0.08; // Exact mathematical 20% reduction algorithm
             let progress = this.timer / this.lifeTime;
             
             for(let p of this.particles) {
