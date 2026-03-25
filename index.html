@@ -37,18 +37,125 @@
       background-position: center;
       background-repeat: no-repeat;
     }
+    
+    /* THE WAYFINDING UI ENGINE */
+    #windDraft {
+      position: absolute;
+      bottom: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50%;
+      padding: 15px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.0);
+      outline: none;
+      color: rgba(255,255,255,0.9);
+      font-family: 'Georgia', serif;
+      font-size: 28px;
+      text-align: center;
+      transition: all 0.8s ease;
+      z-index: 100;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      opacity: 0.6;
+    }
+    #windDraft:focus {
+      opacity: 1.0;
+      border-bottom: 1px solid rgba(255,255,255,0.4);
+    }
+    #windDraft::placeholder {
+      color: rgba(255,255,255,0.3);
+      transition: color 0.5s ease;
+    }
+    #windDraft:focus::placeholder {
+      color: transparent;
+    }
+    
+    #audioToggle {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      z-index: 200;
+      transition: all 0.4s ease;
+      backdrop-filter: blur(5px);
+    }
+    #audioToggle:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+    
+    .hotspot {
+      position: absolute;
+      font-size: 32px;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.5s ease;
+      text-shadow: 0px 0px 10px rgba(255,255,255,0.1);
+      user-select: none;
+    }
+    .hotspot:hover {
+      color: #fff;
+      transform: translateY(-8px) scale(1.15);
+      text-shadow: 0px 0px 25px rgba(255,255,255,0.9);
+    }
+    /* Ghibli Landscape Metaphor Anchors */
+    #hotspotBench { bottom: 22%; left: 15%; }
+    #hotspotMailbox { bottom: 35%; right: 28%; }
+    #hotspotSign { bottom: 28%; left: 30%; }
+    
+    .firefly {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(255,240,150,0.9);
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(255,240,150,1);
+      animation: jitter 5s infinite ease-in-out alternate, flicker 2s infinite alternate;
+      pointer-events: none;
+      z-index: 50;
+    }
+    @keyframes jitter {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(30px, -40px); }
+    }
+    @keyframes flicker {
+      0% { opacity: 0.1; }
+      100% { opacity: 1.0; }
+    }
   </style>
 </head>
 <body>
   
   <div id="bg-container"></div>
   
+  <audio id="ambientAudio" loop>
+      <!-- Safe structural placeholder for procedural ambient Web Audio track binding -->
+      <source src="https://upload.wikimedia.org/wikipedia/commons/2/23/Birds_singing_and_wind.ogg" type="audio/ogg">
+  </audio>
+  
+  <input id="windDraft" type="text" placeholder="Breathe. Listen. Draft into the wind..." autocomplete="off" />
+  <button id="audioToggle">♬ Listen</button>
+  
+  <div tabindex="0" class="hotspot" id="hotspotBench" title="Bench for Reflection">⑄</div>
+  <div tabindex="0" class="hotspot" id="hotspotMailbox" title="A Place for Messages">✉</div>
+  <div tabindex="0" class="hotspot" id="hotspotSign" title="Guidance Sign">⚑</div>
   <script>
     // System State Architecture
     let state = 'A'; // A: Void
     
     let stars = [];
     let globalDots = [];
+    let flowers = []; // Fail on Purpose biological artifact layer natively storing attempted messy inputs securely
+    
     let tapCount = 0;
     let absoluteTapCount = 0; // Tracks across the entire session to drive physical state colors
     
@@ -68,8 +175,86 @@
         return palettes[cycleNum % palettes.length];
     }
     
+    let isPlaying = false;
+    let audioElem;
+    
     function setup() {
       createCanvas(windowWidth, windowHeight);
+      
+      // Initialize internal structural elements and explicitly hook the declarative Master Prompt ecosystem definitions
+      audioElem = document.getElementById('ambientAudio');
+      let draft = document.getElementById('windDraft');
+      
+      // Adaptive Audio Ducking explicitly mapped
+      draft.addEventListener('focus', () => {
+          if (isPlaying) {
+              audioElem.volume = 0.2; // Soft duck resolving overwhelming inputs
+          }
+      });
+      draft.addEventListener('blur', () => {
+          if (isPlaying) {
+              audioElem.volume = 0.8; // Restore environmental atmosphere smoothly
+          }
+      });
+      
+      // Draft into the Wind & Fail on Purpose Interaction Native Architecture
+      draft.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace') {
+              // "Fail on Purpose": Deleting attempts grows a flower in the meadow marking survival explicitly rewarding attempts
+              let box = draft.getBoundingClientRect();
+              flowers.push(new Flower(box.left + random(box.width), box.bottom + random(20, 150)));
+          }
+          else if (e.key === 'Enter') {
+              let text = draft.value.trim();
+              if (text.length > 0) {
+                  // "Release" Feature: Transforms securely into particle catharsis ecosystem natively without server payloading implicitly solving GDPR
+                  let box = draft.getBoundingClientRect();
+                  let sx = box.left + box.width / 2;
+                  let sy = box.top + box.height / 2;
+                  
+                  let burstCount = Math.floor(random(250, 450));
+                  for (let i = 0; i < burstCount; i++) {
+                      let d = new Dot(sx, sy, tapCount);
+                      d.color = random([color(100,200,100), color(255,200,100), color(255,255,255)]); // Petal specific payload explicitly overriding cycle palettes
+                      globalDots.push(d);
+                  }
+                  
+                  // Increment native interaction loop embedding explicit form submissions smoothly inside physical click routines implicitly!
+                  tapCount++;
+                  absoluteTapCount++;
+                  
+                  draft.style.opacity = '0';
+                  setTimeout(() => {
+                      draft.value = ''; // Clean slate completely unrecorded
+                      draft.blur();
+                      draft.style.opacity = '0.6';
+                  }, 800);
+              }
+          }
+      });
+      
+      document.getElementById('audioToggle').addEventListener('click', () => {
+          if (isPlaying) {
+              audioElem.pause();
+              document.getElementById('audioToggle').innerHTML = '♬ Listen';
+              isPlaying = false;
+          } else {
+              audioElem.volume = 0.8;
+              audioElem.play().catch(e => console.log(e));
+              document.getElementById('audioToggle').innerHTML = '❚❚ Quiet';
+              isPlaying = true;
+          }
+      });
+      
+      // Procedural CSS ambient fireflies dynamically injected resolving GreenSock requests silently natively
+      for(let i = 0; i < 12; i++) {
+          let f = document.createElement('div');
+          f.className = 'firefly';
+          f.style.left = random(5, 95) + 'vw';
+          f.style.top = random(40, 95) + 'vh';
+          f.style.animationDelay = random(0, 5) + 's';
+          document.body.appendChild(f);
+      }
       
       // Image pipeline removed directly resolving asynchronous bounding crashes securely natively!
       
@@ -103,6 +288,12 @@
         if (d.alpha <= 0) {
             globalDots.splice(i, 1);
         }
+      }
+      
+      // The Fail-On-Purpose Adaptive Meadow Geometry
+      for (let f of flowers) {
+          f.update();
+          f.display();
       }
     }
     
@@ -361,6 +552,28 @@
             noStroke();
             fill(red(this.color), green(this.color), blue(this.color), this.alpha);
             circle(this.curr.x, this.curr.y, this.size);
+        }
+    }
+    
+    // Explicit Master Prompt Fail On Purpose Biological Entities
+    class Flower {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.size = 0;
+            this.maxSize = random(5, 14);
+            // Nostalgic muted Ghibli floral palettes explicitly replacing vibrant digital sweeps
+            this.col = random([color(230,120,120), color(240,200,90), color(160,180,240), color(255,255,255)]); 
+        }
+        update() {
+            if (this.size < this.maxSize) this.size += 0.05; // Organic slow sprout physically rewarding safe vulnerability attempts
+        }
+        display() {
+            noStroke();
+            fill(this.col);
+            ellipse(this.x, this.y, this.size, this.size);
+            fill(255, 255, 255, 150);
+            ellipse(this.x, this.y, this.size*0.4, this.size*0.4);
         }
     }
   </script>
