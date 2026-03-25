@@ -91,9 +91,10 @@
               let r = butterflyImg.pixels[idx];
               let g = butterflyImg.pixels[idx + 1];
               let b = butterflyImg.pixels[idx + 2];
+              let a = butterflyImg.pixels[idx + 3];
               
-              // The background is pure pitch black (#000), anything visibly bright is the butterfly!
-              if (r > 15 || g > 15 || b > 15) {
+              // Rely strictly on true pure PNG alpha transparency! Ignore RGB noise entirely
+              if (a > 128) {
                   // Center the coordinates seamlessly globally around (0,0) explicitly natively
                   bPixels.push({
                       x: x - imgW/2,
