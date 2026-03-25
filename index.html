@@ -69,6 +69,11 @@
       opacity: 0;
       pointer-events: none;
     }
+    @keyframes textWobble {
+      0% { letter-spacing: 0px; text-shadow: 0 4px 15px rgba(255,255,255,0.4); }
+      50% { letter-spacing: 1.5px; text-shadow: 0 4px 25px rgba(255,255,255,0.9); }
+      100% { letter-spacing: 0px; text-shadow: 0 4px 15px rgba(255,255,255,0.4); }
+    }
     #windDraft.active {
       opacity: 0.8;
       pointer-events: all;
@@ -78,6 +83,7 @@
     #windDraft:focus {
       opacity: 1.0;
       border-bottom: 2px solid rgba(255,255,255,0.9);
+      animation: textWobble 4s infinite ease-in-out;
     }
     #windDraft::placeholder {
       color: rgba(255,255,255,0.3);
@@ -156,12 +162,12 @@
   <!-- Phase 3 Mood Context Layer natively intersecting background images offline -->
   <div id="moodLayer"></div>
   
-  <input id="windDraft" type="text" placeholder="Breathe. Listen. Draft into the wind..." autocomplete="off" />
-  <button id="audioToggle">♬ Listen</button>
+  <input id="windDraft" type="text" aria-label="Draft into the wind" placeholder="Breathe. Listen. Draft into the wind..." autocomplete="off" />
+  <button id="audioToggle" aria-label="Listen for peace">♬ Listen</button>
   
-  <div tabindex="0" class="hotspot" id="hotspotBench" title="Bench for Reflection">⑄</div>
-  <div tabindex="0" class="hotspot" id="hotspotMailbox" title="A Place for Messages">✉</div>
-  <div tabindex="0" class="hotspot" id="hotspotSign" title="Guidance Sign">⚑</div>
+  <div tabindex="0" class="hotspot" id="hotspotBench" aria-label="Change the weather" title="Change the weather">⑄</div>
+  <div tabindex="0" class="hotspot" id="hotspotMailbox" aria-label="Draft into the wind" title="Draft into the wind">✉</div>
+  <div tabindex="0" class="hotspot" id="hotspotSign" aria-label="Leave a temporal marker" title="Leave a temporal marker">⚑</div>
   <script>
     // System State Architecture
     let state = 'A'; // A: Void
@@ -223,6 +229,12 @@
           if (draft.classList.contains('active')) draft.focus();
       });
       
+      // Wayfinding Bookmark Interaction explicit mapping 
+      document.getElementById('hotspotSign').addEventListener('click', () => {
+          // Native "Temporal Marker" drops a waypoint locally natively capturing cursor states seamlessly mimicking privacy logic
+          flowers.push(new Waystone(random(width*0.2, width*0.8), random(height*0.7, height*0.9), currentMood));
+      });
+      
       // Adaptive Audio Ducking explicitly mapped filtering Tone.js dynamically
       draft.addEventListener('focus', () => {
           if (isPlaying && filter) {
@@ -236,6 +248,16 @@
       });
       
       // Draft into the Wind & Fail on Purpose Interaction Native Architecture
+      let statedHasBloomed = false;
+      draft.addEventListener('input', (e) => {
+          let str = draft.value.toLowerCase().replace(/[^a-z\s]/g, '');
+          if (str.includes("i dont know what to say") && !statedHasBloomed) {
+              // Master Prompt special micro-interaction physically rendering giant specialized marker natively resolving offline
+              flowers.push(new Waystone(width/2, height * 0.85, currentMood)); 
+              statedHasBloomed = true;
+          }
+      });
+      
       draft.addEventListener('keydown', (e) => {
           if (e.key === 'Backspace') {
               // "Fail on Purpose": Deleting attempts grows a flower in the meadow marking survival explicitly rewarding attempts
@@ -276,14 +298,17 @@
       document.getElementById('audioToggle').addEventListener('click', async () => {
           if (!isToneInited) {
               await Tone.start();
+              // Generative Grounding: Tone.js Master Prompt Logic Native Implementation
+              let lfo = new Tone.LFO("0.08hz", 200, 1200).start(); // LFO Filter simulating wind breathing physics inherently!
               filter = new Tone.Filter(800, "lowpass").toDestination();
+              lfo.connect(filter.frequency);
               
               synth = new Tone.PolySynth(Tone.SineOscillator, {
-                  envelope: { attack: 2.0, decay: 4, sustain: 0.1, release: 5 }
+                  envelope: { attack: 2.5, decay: 4, sustain: 0.2, release: 5 } // Soft attack Native
               }).connect(filter);
               
-              // C Major Pentatonic mapping guaranteeing harmonic resonance without dissonance visually 
-              const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 521.25, 587.33, 659.25, 783.99, 880.00];
+              // G Major Pentatonic mapped inherently (G, A, B, D, E) guaranteeing harmonic grounding flawlessly
+              const scale = [196.00, 220.00, 246.94, 293.66, 329.63, 392.00, 440.00, 493.88, 587.33, 659.25, 783.99];
               
               Tone.Transport.scheduleRepeat((time) => {
                   if (random() > 0.4) { // Irregular structural intervals dynamically seeding unique compositions organically
@@ -602,10 +627,10 @@
             }
             else if (this.mode === 'FLUTTER') {
                 // Graceful sweeping wing-beats visually drifting upwards
-                this.curr.x += map(noise(this.nx, frameCount * 0.05), 0, 1, -0.6, 0.6);
-                this.curr.y -= random(0.12, 0.6); // Rising gravity inherently halved AGAIN
+                this.curr.x += Math.sin(frameCount * 0.05 + this.seed) * 2.5; // Sine-wave mapped envelope catharsis specifically!
+                this.curr.y -= random(0.6, 1.2); // Faster upward rising to clear viewport distinctly structurally Native
                 this.nx += 0.025;
-                this.alpha -= 0.2; // beautiful extended dissolve explicitly dragged linearly halved AGAIN
+                this.alpha -= 0.6; // beautiful extended dissolve explicitly dragged linearly halved AGAIN
             }
             else if (this.mode === 'DISSOLVE') {
                 this.alpha -= 6.5; // Natural localized linear evaporation aggressively accelerated rendering crisp clean loop transitions eliminating visual clutter
@@ -640,6 +665,28 @@
             ellipse(this.x, this.y, this.size, this.size);
             fill(255, 255, 255, 150);
             ellipse(this.x, this.y, this.size*0.4, this.size*0.4);
+        }
+    }
+    
+    class Waystone {
+        constructor(x, y, storedMood) {
+            this.x = x;
+            this.y = y;
+            this.size = 0;
+            this.maxSize = 25;
+            this.pulse = random(100);
+        }
+        update() {
+            if (this.size < this.maxSize) this.size += 0.2; // Rise naturally resolving state natively
+            this.pulse += 0.05;
+        }
+        display() {
+            noStroke();
+            let glow = map(Math.sin(this.pulse), -1, 1, 150, 255); // Micro-interaction Soft-UI pulsing visually
+            fill(100, 200, 255, glow * 0.6);
+            ellipse(this.x, this.y, this.size, this.size + 10);
+            fill(255, 255, 255, glow);
+            ellipse(this.x, this.y, this.size * 0.5, this.size * 0.6);
         }
     }
   </script>
