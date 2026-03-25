@@ -48,9 +48,17 @@
     let state = 'A'; // A: Void
     
     let stars = [];
-    let globalDots = []; // Persistent tracking system storing state metadata across iterative clicks!
+    let globalDots = [];
     let tapCount = 0;
     let absoluteTapCount = 0; // Tracks across the entire session to drive physical state colors
+    
+    let butterflyImg;
+    let bPixels = []; // Array of structurally parsed hyper-realistic photographic points {x, y, col}
+    
+    function preload() {
+        // Loads the absolute 100% realistic multi-colorful photograph natively overriding parametric maths
+        butterflyImg = loadImage('butterfly_mask.png');
+    }
     
     // Dynamically returns the current thematic palette based cleanly on the 10-click loop
     function getCurrentThemeColor() {
@@ -68,6 +76,33 @@
     
     function setup() {
       createCanvas(windowWidth, windowHeight);
+      
+      // Parse the loaded high-definition image into raw actionable geometric dot data!
+      butterflyImg.resize(800, 0); // Normalize macro sizing natively
+      butterflyImg.loadPixels();
+      
+      let imgW = butterflyImg.width;
+      let imgH = butterflyImg.height;
+      let densityScale = 4; // Scan incrementally to produce a dense gorgeous dot matrix outline
+      
+      for (let x = 0; x < imgW; x += densityScale) {
+          for (let y = 0; y < imgH; y += densityScale) {
+              let idx = (x + y * imgW) * 4;
+              let r = butterflyImg.pixels[idx];
+              let g = butterflyImg.pixels[idx + 1];
+              let b = butterflyImg.pixels[idx + 2];
+              
+              // The background is pure pitch black (#000), anything visibly bright is the butterfly!
+              if (r > 15 || g > 15 || b > 15) {
+                  // Center the coordinates seamlessly globally around (0,0) explicitly natively
+                  bPixels.push({
+                      x: x - imgW/2,
+                      y: y - imgH/2,
+                      col: color(r, g, b)
+                  });
+              }
+          }
+      }
       
       // Initialize Golden floating magic spores (Spirited Away style)
       for (let i = 0; i < 120; i++) { 
@@ -113,43 +148,33 @@
       
       if (tapCount === 5 || tapCount === 10) {
           // Command ALL dots natively waiting at the edges to rush inwards toward the cursor
-          let scaleR = min(width, height) / 10.0;
+          let scaleR = min(width, height) / butterflyImg.height * 0.85; // Fill viewport smoothly
           let activeDots = globalDots.filter(d => d.mode === 'WAIT');
           
           for (let i = 0; i < activeDots.length; i++) {
               let d = activeDots[i];
-              let tVal = (i / activeDots.length) * 12 * PI;
-              let e = 2.71828;
-              let s = pow(sin(tVal/12), 5);
-              let tx = sin(tVal) * (pow(e, cos(tVal)) - 2*cos(4*tVal) - s) * scaleR;
-              let ty = -cos(tVal) * (pow(e, cos(tVal)) - 2*cos(4*tVal) - s) * scaleR;
+              
+              // Swap abstract parametric line math natively with absolute realistic macro structural dots!
+              let rp = random(bPixels); // Pull a random pixel from the hyper-realistic physical photo array
+              
+              let tx = rp.x * scaleR;
+              let ty = rp.y * scaleR;
               
               if (tapCount === 5) {
-                 // 50% formed, noise injected to scramble visually into a vaguer form
-                 tx += random(-45, 45);
-                 ty += random(-45, 45);
+                 // 50% formed, heavy noise injected explicitly scrambling the physical photographic form
+                 tx += random(-55, 55);
+                 ty += random(-55, 55);
               }
-              // tapCount 10 is perfectly cleanly formed, no added noise geometrically
+              // tapCount 10 mathematically resolves the image 100% cleanly without noise interference natively!
               
               d.homeTarget = createVector(mouseX + tx, mouseY + ty);
               d.mode = 'RETURN';
               d.timer = 0; // Starts the structural form countdown timer
               d.lerpSpeed = random(0.002, 0.0087); // Half sped AGAIN natively drifting seamlessly inward slowly
               
-              // Refreshing color palette explicitly just for the 10th-click butterfly formation
+              // Reproduce "100% multi-colorful butterfly" implicitly by forcing the returning edge-dots to adopt the EXACT vibrant color properties mapped to the photography array!
               if (tapCount === 10) {
-                  // "multi colourful butterfly"
-                  let vibrantColors = [
-                      color(255, 50, 50),   // Primary Red
-                      color(255, 150, 40),  // Vivid Orange
-                      color(255, 230, 40),  // Bright Yellow
-                      color(40, 220, 100),  // Spring Green
-                      color(40, 160, 255),  // Sky Blue
-                      color(150, 60, 255),  // Deep Purple
-                      color(255, 80, 200),  // Hot Pink
-                      color(255, 255, 255)  // Pure White
-                  ];
-                  d.color = random(vibrantColors); 
+                  d.color = rp.col; 
               }
           }
       } else {
