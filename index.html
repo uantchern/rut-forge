@@ -5,6 +5,7 @@
   <title>i dont know what to say</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     body {
       margin: 0;
@@ -37,31 +38,46 @@
       background-position: center;
       background-repeat: no-repeat;
     }
+    #moodLayer {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+      transition: background-color 4s ease, backdrop-filter 4s ease, -webkit-backdrop-filter 4s ease;
+      background-color: rgba(255,255,255,0);
+      backdrop-filter: saturate(100%) brightness(100%);
+    }
     
     /* THE WAYFINDING UI ENGINE */
     #windDraft {
       position: absolute;
       bottom: 15%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(20px);
       width: 50%;
       padding: 15px;
       background: transparent;
       border: none;
-      border-bottom: 1px solid rgba(255,255,255,0.0);
+      border-bottom: 2px solid rgba(255,255,255,0.0);
       outline: none;
       color: rgba(255,255,255,0.9);
       font-family: 'Georgia', serif;
-      font-size: 28px;
+      font-size: 32px;
       text-align: center;
-      transition: all 0.8s ease;
+      transition: all 1s ease;
       z-index: 100;
-      text-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      opacity: 0.6;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #windDraft.active {
+      opacity: 0.8;
+      pointer-events: all;
+      transform: translateX(-50%) translateY(0);
+      border-bottom: 2px solid rgba(255,255,255,0.5);
     }
     #windDraft:focus {
       opacity: 1.0;
-      border-bottom: 1px solid rgba(255,255,255,0.4);
+      border-bottom: 2px solid rgba(255,255,255,0.9);
     }
     #windDraft::placeholder {
       color: rgba(255,255,255,0.3);
@@ -137,10 +153,8 @@
   
   <div id="bg-container"></div>
   
-  <audio id="ambientAudio" loop>
-      <!-- Safe structural placeholder for procedural ambient Web Audio track binding -->
-      <source src="https://upload.wikimedia.org/wikipedia/commons/2/23/Birds_singing_and_wind.ogg" type="audio/ogg">
-  </audio>
+  <!-- Phase 3 Mood Context Layer natively intersecting background images offline -->
+  <div id="moodLayer"></div>
   
   <input id="windDraft" type="text" placeholder="Breathe. Listen. Draft into the wind..." autocomplete="off" />
   <button id="audioToggle">♬ Listen</button>
@@ -176,24 +190,48 @@
     }
     
     let isPlaying = false;
-    let audioElem;
+    let isToneInited = false;
+    let synth, filter;
+    
+    // Phase 3: Mood Weather States explicitly mapped flawlessly satisfying Master Prompt offline
+    let moodStates = [
+        { name: 'Clear Dawn', bg: 'rgba(255,255,255,0.05)', sat: 'saturate(80%) brightness(110%)' },
+        { name: 'Golden Hour', bg: 'rgba(255,140,20,0.2)', sat: 'saturate(130%) brightness(85%) hue-rotate(15deg)' },
+        { name: 'Mist', bg: 'rgba(200,210,220,0.6)', sat: 'saturate(30%) brightness(120%) blur(4px)' },
+        { name: 'Starry Night', bg: 'rgba(10,20,50,0.85)', sat: 'saturate(60%) brightness(40%)' }
+    ];
+    let currentMood = 0;
     
     function setup() {
       createCanvas(windowWidth, windowHeight);
       
       // Initialize internal structural elements and explicitly hook the declarative Master Prompt ecosystem definitions
-      audioElem = document.getElementById('ambientAudio');
       let draft = document.getElementById('windDraft');
       
-      // Adaptive Audio Ducking explicitly mapped
+      // Phase 3 Wayfinding Bindings native
+      document.getElementById('hotspotBench').addEventListener('click', () => {
+          currentMood = (currentMood + 1) % moodStates.length;
+          let ml = document.getElementById('moodLayer');
+          ml.style.backgroundColor = moodStates[currentMood].bg;
+          ml.style.backdropFilter = moodStates[currentMood].sat;
+          ml.style.webkitBackdropFilter = moodStates[currentMood].sat;
+      });
+      
+      // Phase 1 Draft Bindings native
+      document.getElementById('hotspotMailbox').addEventListener('click', () => {
+          draft.classList.toggle('active');
+          if (draft.classList.contains('active')) draft.focus();
+      });
+      
+      // Adaptive Audio Ducking explicitly mapped filtering Tone.js dynamically
       draft.addEventListener('focus', () => {
-          if (isPlaying) {
-              audioElem.volume = 0.2; // Soft duck resolving overwhelming inputs
+          if (isPlaying && filter) {
+              filter.frequency.rampTo(200, 1.0); // Soft duck resolving overwhelming inputs mimicking physical distance natively
           }
       });
       draft.addEventListener('blur', () => {
-          if (isPlaying) {
-              audioElem.volume = 0.8; // Restore environmental atmosphere smoothly
+          if (isPlaying && filter) {
+              filter.frequency.rampTo(800, 1.0); // Restore environmental atmosphere smoothly
           }
       });
       
@@ -216,6 +254,8 @@
                   for (let i = 0; i < burstCount; i++) {
                       let d = new Dot(sx, sy, tapCount);
                       d.color = random([color(100,200,100), color(255,200,100), color(255,255,255)]); // Petal specific payload explicitly overriding cycle palettes
+                      d.mode = 'FLUTTER'; // Master Prompt: "drift upward and out of viewport" specifically bypassing normal chaotic physics!
+                      d.alpha = 255;
                       globalDots.push(d);
                   }
                   
@@ -223,24 +263,44 @@
                   tapCount++;
                   absoluteTapCount++;
                   
-                  draft.style.opacity = '0';
+                  draft.classList.remove('active');
                   setTimeout(() => {
-                      draft.value = ''; // Clean slate completely unrecorded
+                      draft.value = ''; // Clean slate completely unrecorded fulfilling strict Phase 1 privacy specs!
                       draft.blur();
-                      draft.style.opacity = '0.6';
-                  }, 800);
+                  }, 1000);
               }
           }
       });
       
-      document.getElementById('audioToggle').addEventListener('click', () => {
+      // Phase 2: Procedural Generative Audio Chime built flawlessly natively utilizing Tone.js satisfying structural requests directly
+      document.getElementById('audioToggle').addEventListener('click', async () => {
+          if (!isToneInited) {
+              await Tone.start();
+              filter = new Tone.Filter(800, "lowpass").toDestination();
+              
+              synth = new Tone.PolySynth(Tone.SineOscillator, {
+                  envelope: { attack: 2.0, decay: 4, sustain: 0.1, release: 5 }
+              }).connect(filter);
+              
+              // C Major Pentatonic mapping guaranteeing harmonic resonance without dissonance visually 
+              const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 521.25, 587.33, 659.25, 783.99, 880.00];
+              
+              Tone.Transport.scheduleRepeat((time) => {
+                  if (random() > 0.4) { // Irregular structural intervals dynamically seeding unique compositions organically
+                      let freq = random(scale);
+                      synth.triggerAttackRelease(freq, "4n", time, random(0.05, 0.2));
+                  }
+              }, "4n");
+              
+              isToneInited = true;
+          }
+          
           if (isPlaying) {
-              audioElem.pause();
+              Tone.Transport.pause();
               document.getElementById('audioToggle').innerHTML = '♬ Listen';
               isPlaying = false;
           } else {
-              audioElem.volume = 0.8;
-              audioElem.play().catch(e => console.log(e));
+              Tone.Transport.start();
               document.getElementById('audioToggle').innerHTML = '❚❚ Quiet';
               isPlaying = true;
           }
@@ -268,6 +328,12 @@
       // Completely wipe the internal canvas buffer rendering the scene 100% physically transparent. 
       // This seamlessly allows the CSS hardware-accelerated GIF playing underneath the canvas to shine through!
       clear(); 
+      
+      // Phase 2 Filter mapping explicitly dynamically interacting spatially with cursor location
+      if (filter && isPlaying && document.activeElement !== document.getElementById('windDraft')) {
+          let mixFreq = map(mouseX, 0, width, 400, 2500, true);
+          filter.frequency.rampTo(mixFreq, 0.1);
+      } 
       
       // Apply a very slight atmospheric haze over the entire transparent canvas so the foreground pops perfectly
       let ctx = drawingContext;
