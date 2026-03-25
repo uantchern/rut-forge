@@ -149,20 +149,38 @@
       
       if (tapCount === 5 || tapCount === 10) {
           // Command ALL dots natively waiting at the edges to rush inwards toward the cursor
-          let scaleR = min(width, height) / butterflyImg.height * 0.85; // Fill viewport smoothly
+          let scaleR = min(width, height) / (butterflyImg.height || 800) * 0.85; // Fill viewport smoothly or bound to 800 fallback
           let activeDots = globalDots.filter(d => d.mode === 'WAIT');
           
           for (let i = 0; i < activeDots.length; i++) {
               let d = activeDots[i];
               
-              // Swap abstract parametric line math natively with absolute realistic macro structural dots!
-              let rp = random(bPixels); // Pull a random pixel from the hyper-realistic physical photo array
+              let tx, ty;
               
-              let tx = rp.x * scaleR;
-              let ty = rp.y * scaleR;
+              if (bPixels && bPixels.length > 0) {
+                  // Photorealism Native! Map exactly to the realistic monarch geometry and raw color physics!
+                  let rp = random(bPixels);
+                  tx = rp.x * scaleR;
+                  ty = rp.y * scaleR;
+                  if (tapCount === 10) d.color = rp.col; 
+              } else {
+                  // Infallible absolute parametric fallback protecting engines actively against browser plugin/proxy image-stripping interference!
+                  let tVal = random(12 * Math.PI);
+                  let e = 2.71828;
+                  let s = pow(sin(tVal/12), 5);
+                  let paramScale = min(width, height) / 10.0;
+                  
+                  tx = sin(tVal) * (pow(e, cos(tVal)) - 2*cos(4*tVal) - s) * paramScale;
+                  ty = -cos(tVal) * (pow(e, cos(tVal)) - 2*cos(4*tVal) - s) * paramScale;
+                  
+                  if (tapCount === 10) {
+                      let vibrantColors = [color(255, 50, 50), color(255, 150, 40), color(255, 230, 40), color(40, 220, 100), color(40, 160, 255), color(150, 60, 255), color(255, 80, 200), color(255, 255, 255)];
+                      d.color = random(vibrantColors); 
+                  }
+              }
               
               if (tapCount === 5) {
-                 // 50% formed, heavy noise injected explicitly scrambling the physical photographic form
+                 // 50% formed, heavy noise injected explicitly scrambling the physical form
                  tx += random(-55, 55);
                  ty += random(-55, 55);
               }
@@ -172,11 +190,6 @@
               d.mode = 'RETURN';
               d.timer = 0; // Starts the structural form countdown timer
               d.lerpSpeed = random(0.002, 0.0087); // Half sped AGAIN natively drifting seamlessly inward slowly
-              
-              // Reproduce "100% multi-colorful butterfly" implicitly by forcing the returning edge-dots to adopt the EXACT vibrant color properties mapped to the photography array!
-              if (tapCount === 10) {
-                  d.color = rp.col; 
-              }
           }
       } else {
           // Clicks 1-4, 6-9: Chaos interaction!
@@ -311,17 +324,17 @@
             
             this.lerpSpeed = random(0.0012, 0.006); // Extremely slowly drifting outwards halved natively AGAIN
             
-            // Logic mapping the exact specified dropout probability bounds per distinct step block
+            // Logic explicitly massively boosting survivor caps inherently delivering triple the border congregation organically!
             this.survivor = false;
             if (tapIndex <= 4) {
-                this.survivor = random() > 0.50; // 50% wait at edges
+                this.survivor = random() > 0.15; // 85% wait at edges
             } else if (tapIndex >= 6 && tapIndex <= 9) {
-                this.survivor = random() > 0.20; // 80% wait at edges
+                this.survivor = random() > 0.05; // 95% wait at edges
             }
             
             this.seed = random(1000);
             this.nx = random(100);
-            this.edgeBuffer = random(5, 120); // Organic varied stopping points shattering the hard straight line artifact seamlessly
+            this.edgeBuffer = random(5, 75); // Shallow completely random jagged border zone
         }
         
         update() {
@@ -342,15 +355,19 @@
                 }
             } 
             else if (this.mode === 'WAIT') {
-                // Organic eager anticipating swarm! They jitter visibly like a living hive!
-                let wanderX = map(noise(this.nx, frameCount * 0.03), 0, 1, -2, 2);
-                let wanderY = map(noise(this.nx + 100, frameCount * 0.03), 0, 1, -2, 2);
+                // Completely unbound wandering bounds! They roam eagerly along the deep boundaries physically!
+                let wanderX = map(noise(this.nx, frameCount * 0.015), 0, 1, -0.6, 0.6);
+                let wanderY = map(noise(this.nx + 100, frameCount * 0.015), 0, 1, -0.6, 0.6);
                 this.curr.x += wanderX;
                 this.curr.y += wanderY;
                 
-                // Softly tether them tightly to their exact edge collision point so they don't migrate back into the middle!
-                this.curr.x = lerp(this.curr.x, this.waitAnchor.x, 0.05);
-                this.curr.y = lerp(this.curr.y, this.waitAnchor.y, 0.05);
+                // Radius-tether prevents strict horizontal line clumping while guaranteeing they stay near the boundary!
+                let dx = this.curr.x - this.waitAnchor.x;
+                let dy = this.curr.y - this.waitAnchor.y;
+                if (dx*dx+dy*dy > 1200) { 
+                    this.curr.x = lerp(this.curr.x, this.waitAnchor.x, 0.015);
+                    this.curr.y = lerp(this.curr.y, this.waitAnchor.y, 0.015);
+                }
             }
             else if (this.mode === 'RETURN') {
                 // Swooping cleanly inward from edge boundaries directly back to the physical cursor geometry limits
