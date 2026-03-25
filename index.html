@@ -58,9 +58,14 @@
     function setup() {
       createCanvas(windowWidth, windowHeight);
       
-      // Asynchronously fetch the custom Ghibli landscape without breaking the engine loader
-      loadImage('background.jpg', img => {
+      // Asynchronously fetch the custom background without breaking the engine loader
+      // Natively supports Animated GIFs first, gracefully rolling back to static JPEG
+      loadImage('background.gif', img => {
           bgImage = img;
+      }, err => {
+          loadImage('background.jpg', img2 => {
+              bgImage = img2;
+          });
       });
       
       // Initialize Golden floating magic spores (Spirited Away style)
