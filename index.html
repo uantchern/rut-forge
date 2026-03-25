@@ -56,9 +56,9 @@
     let dTimer = 0;
     let dCenter;
     
-    // Dynamically returns the current thematic palette based cleanly on the 15-click loop
+    // Dynamically returns the current thematic palette based cleanly on the 10-click loop
     function getCurrentThemeColor() {
-        let cycleNum = Math.floor(Math.max(0, absoluteTapCount - 1) / 15);
+        let cycleNum = Math.floor(Math.max(0, absoluteTapCount - 1) / 10);
         let palettes = [
             color(20, 55, 90),   // Cycle 1: Deep Navy
             color(190, 45, 55),  // Cycle 2: Rich Crimson
@@ -151,8 +151,8 @@
     }
     
     function mousePressed() {
-      // Cleanly wipe the slate exactly on the 16th interact to immediately spin up the new 15-click Color theme loop
-      if (tapCount === 15) {
+      // Cleanly wipe the slate exactly on the 11th interact to immediately spin up the new 10-click Color theme loop
+      if (tapCount === 10) {
          tapCount = 0;
          bursts = []; 
       }
@@ -291,28 +291,28 @@
                 let ty = -cos(ang) * p * scaleR;
                 
                 let voicelessProb = 0.0;
+                let lerpSpd = random(0.0016, 0.016); // Mathematical exact 20% drag reduction
                 
-                // Formulate the Butterfly Parametric Curve seamlessly but *exclusively* on the 3 user-stated checkpoint taps!
+                // Formulate the Butterfly Parametric Curve seamlessly but *exclusively* on the 10-Click Checkpoints
                 if (tapIndex === 5) {
-                    // Vague Heavy shape (1st Appearance)
-                    tx += random(-140, 140);
-                    ty += random(-140, 140);
-                    voicelessProb = 0.50; // 50% trapped suppressing the bounds
+                    // 50% Formed (1st Appearance)
+                    tx += random(-40, 40);
+                    ty += random(-40, 40);
+                    voicelessProb = 0.35; // 35% trapped, suppressing bounded limits simulating a stutter 
                 } else if (tapIndex === 10) {
-                    // 50% Formed (2nd Appearance)
-                    tx += random(-35, 35);
-                    ty += random(-35, 35);
-                    voicelessProb = 0.20; // 20% trapped inside the core
-                } else if (tapIndex === 15) {
-                    // 100% Formed! (3rd Appearance)
-                    tx += random(-5, 5);
-                    ty += random(-5, 5);
-                    voicelessProb = 0.0; // 100% leap sequentially building the absolute geometry
+                    // 100% Formed! Crystalline Formulation (2nd Appearance)
+                    tx += random(-2, 2);
+                    ty += random(-2, 2);
+                    voicelessProb = 0.0; // 100% perfectly tracing exact geometric coordinates
                 } else {
-                    // Non-milestone clicks actively refuse to form the shape! Pure biological ambient chaos.
-                    tx = random(-140, 140);
-                    ty = random(-140, 140);
-                    voicelessProb = 0.85; // heavily suppressed dots simulating failed structural flight attempts
+                    // Complete Biological Chaos! 
+                    // Violently explode across the whole screen rapidly accelerating into the edges
+                    let explodeAng = random(TWO_PI);
+                    let explodeDist = random(width * 0.45, width * 1.5);
+                    tx = cos(explodeAng) * explodeDist;
+                    ty = sin(explodeAng) * explodeDist;
+                    voicelessProb = 0.0; // Zero dots trapped. All instantly flee outward!
+                    lerpSpd = random(0.06, 0.16); // Massively accelerated individualized physical speed so they smash to the screen edges incredibly fast, leaving no trace
                 }
                 
                 let isVoiceless = random() < voicelessProb;
@@ -329,7 +329,7 @@
                     vx: 0,
                     vy: 0,
                     alpha: 255,
-                    lerpSpeed: random(0.0016, 0.016) // Mathematical exact 20% drag reduction
+                    lerpSpeed: lerpSpd // Directly applies dynamic algorithmic speed boosts
                 });
             }
             this.spawnedButterflies = false; // logic lock for end-state triggers
