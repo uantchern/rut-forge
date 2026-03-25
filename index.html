@@ -21,10 +21,27 @@
       display: block;
       width: 100vw;
       height: 100vh;
+      background: transparent !important;
+    }
+    
+    #bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      /* GPU-accelerated stacking. Preferentially loops the GIF. Falls back to static JPG. Default gradient beneath all. */
+      background-image: url('background.gif'), url('background.jpg'), linear-gradient(to bottom, #1c5aa8 0%, #76ade3 40%, #dceaf2 80%, #a8c797 100%);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
   </style>
 </head>
 <body>
+  
+  <div id="bg-container"></div>
   
   <script>
     // System State Architecture
@@ -39,7 +56,6 @@
     let absoluteTapCount = 0; // Tracks across the entire session to drive physical state colors
     let dTimer = 0;
     let dCenter;
-    let bgImage = null; // Asynchronously loaded Ghibli landscape
     
     // Dynamically returns the current thematic palette based cleanly on the 15-click loop
     function getCurrentThemeColor() {
@@ -58,16 +74,6 @@
     function setup() {
       createCanvas(windowWidth, windowHeight);
       
-      // Asynchronously fetch the custom background without breaking the engine loader
-      // Natively supports Animated GIFs first, gracefully rolling back to static JPEG
-      loadImage('background.gif', img => {
-          bgImage = img;
-      }, err => {
-          loadImage('background.jpg', img2 => {
-              bgImage = img2;
-          });
-      });
-      
       // Initialize Golden floating magic spores (Spirited Away style)
       for (let i = 0; i < 120; i++) { 
         stars.push(new Star());
@@ -80,41 +86,14 @@
     }
     
     function draw() {
-      if (bgImage) {
-          // Responsive "CSS Cover" style rendering for the background landscape
-          let aspect = bgImage.width / bgImage.height;
-          let screenAspect = width / height;
-          let drawW = width;
-          let drawH = height;
-          let dx = 0;
-          let dy = 0;
-          
-          if (screenAspect > aspect) {
-              drawH = width / aspect;
-              dy = (height - drawH) / 2;
-          } else {
-              drawW = height * aspect;
-              dx = (width - drawW) / 2;
-          }
-          
-          // Render the painted world!
-          image(bgImage, dx, dy, drawW, drawH);
-          
-          // Apply a very slight atmospheric haze over the image so the foreground pops perfectly
-          fill(240, 245, 238, 40);
-          rect(0, 0, width, height);
-          
-      } else {
-          // High-performance vertical linear gradient for 2D atmospheric perspective (Zenith to Forest Edge)
-          let ctx = drawingContext;
-          let grad = ctx.createLinearGradient(0, 0, 0, height);
-          grad.addColorStop(0, '#1c5aa8');    // Deep realistic polarized sky blue
-          grad.addColorStop(0.4, '#76ade3');  // Mid sky gradient
-          grad.addColorStop(0.8, '#dceaf2');  // Ultra-realistic atmospheric white-blue fading horizon
-          grad.addColorStop(1, '#a8c797');    // Muted realistic distant ground fusion
-          ctx.fillStyle = grad;
-          ctx.fillRect(0, 0, width, height);
-      }
+      // Completely wipe the internal canvas buffer rendering the scene 100% physically transparent. 
+      // This seamlessly allows the CSS hardware-accelerated GIF playing underneath the canvas to shine through!
+      clear(); 
+      
+      // Apply a very slight atmospheric haze over the entire transparent canvas so the foreground pops perfectly
+      let ctx = drawingContext;
+      fill(240, 245, 238, 40);
+      rect(0, 0, width, height);
       
       // State A: Summer Motes background drift & Clouds
       for (let c of clouds) {
